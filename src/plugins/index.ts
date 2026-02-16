@@ -36,10 +36,6 @@ export {
   type MouseUnsubscribe,
   type MouseWheelHandler,
 } from './mouse';
-// export {
-//   contentPlugin,
-//   type ContentControls,
-//   type ContentPluginOptions,
-// } from './content';
+export { pointerPlugin, type PointerControls } from './pointer';
 export { lerpPlugin, type LerpControls } from './lerp';
 export { springPlugin, type SpringControls } from './spring';
