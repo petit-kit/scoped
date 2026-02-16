@@ -1,6 +1,6 @@
 {
   "name": "@petit-kit/scoped",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A lightweight, reactive web component framework with built-in plugins for modern web development.",
   "keywords": [
     "web-components",
