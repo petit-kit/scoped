@@ -4,8 +4,7 @@ export * from './plugins';
  * Scope - A lightweight, framework-agnostic library for building web components
  *
  * @module scope
- * @version 0.0.1
- * @since 0.0.1
+ * @version 0.0.5
  * @description Provides a minimal abstraction over Custom Elements API, making it easy
  * to create reusable, encapsulated components with reactive state, lifecycle hooks,
  * and a simple template-based rendering system.
@@ -57,9 +56,17 @@ export * from './plugins';
  * Library version.
  *
  * @constant {string}
- * @since 0.1.0
  */
-const SCOPE_VERSION = '0.0.1';
+const SCOPE_VERSION = '0.0.5';
+
+/**
+ * Logs version and repository info for @petit-kit/scoped.
+ * Useful for debugging or confirming library presence.
+ */
+export const happy = () => {
+  console.info('The website is using @petit-kit/scoped v' + SCOPE_VERSION);
+  console.info('https://github.com/petit-kit/scoped');
+};
 
 /**
  * Scoped template interpolation pattern.
@@ -102,7 +109,6 @@ const bindPrefix = 'bind:';
  * Supported prop types for type checking and parsing
  *
  * @typedef {StringConstructor|NumberConstructor|BooleanConstructor|ObjectConstructor|ArrayConstructor} PropType
- * @since 0.1.0
  */
 export type PropType =
   | StringConstructor
@@ -116,7 +122,6 @@ export type PropType =
  *
  * @template T - The type of the prop value
  * @interface PropDefinition
- * @since 0.1.0
  *
  * @example
  * ```typescript
@@ -150,7 +155,6 @@ export interface PropDefinition<T = any> {
  * Props definition object mapping prop names to their definitions or default values
  *
  * @typedef {Record<string, PropDefinition | any>} PropsDefinition
- * @since 0.1.0
  *
  * @example
  * ```typescript
@@ -182,7 +186,6 @@ export type ComponentPlugin<Ext extends Record<string, any> = {}> = {
  * Options for component definition
  *
  * @interface ComponentOptions
- * @since 0.1.0
  *
  * @example
  * ```typescript
@@ -223,7 +226,6 @@ export interface ComponentOptions<
  * Methods available on the component host element
  *
  * @interface ComponentHost
- * @since 0.1.0
  *
  * @example
  * ```typescript
@@ -335,7 +337,6 @@ export interface ComponentHost {
  * @template Actions - Type of action methods
  * @template Refs - Type of DOM refs
  * @interface ComponentContext
- * @since 0.1.0
  *
  * @example Basic usage
  * ```typescript
@@ -457,42 +458,36 @@ export interface ComponentContextBase<
    * Register callback to run after component is mounted
    * @method onMount
    * @param {function(): void} callback - Callback function
-   * @since 0.1.0
    */
   onMount: (callback: () => void) => void;
   /**
    * Register callback to run when component is destroyed
    * @method onDestroy
    * @param {function(): void} callback - Callback function
-   * @since 0.1.0
    */
   onDestroy: (callback: () => void) => void;
   /**
    * Register callback to run after each update/re-render
    * @method onUpdate
    * @param {function(): void} callback - Callback function
-   * @since 0.3.0
    */
   onUpdate: (callback: () => void) => void;
   /**
    * Register callback to run before each update/re-render
    * @method onBeforeUpdate
    * @param {function(): void} callback - Callback function
-   * @since 0.3.0
    */
   onBeforeUpdate: (callback: () => void) => void;
   /**
    * Register callback to run only on the first update (after mount)
    * @method onFirstUpdate
    * @param {function(): void} callback - Callback function
-   * @since 0.3.0
    */
   onFirstUpdate: (callback: () => void) => void;
   /**
    * Register callback to run when props change
    * @method onPropsChanged
    * @param {function(string, any, any): void} callback - Callback function
-   * @since 0.3.0
    *
    * @example
    * ```typescript
@@ -528,7 +523,6 @@ export interface ComponentContextBase<
    * @param {function(any[]): (void|function())} fn - Effect function that can return cleanup
    * @param {any[] | (() => any[])} [deps] - Optional dependency array or deps getter
    * @returns {() => void} Cleanup function to remove the effect
-   * @since 0.2.0
    *
    * @example
    * ```typescript
@@ -546,7 +540,6 @@ export interface ComponentContextBase<
    * @param {function(any[]): *} getter - Function that returns the computed value
    * @param {any[] | (() => any[])} [deps] - Optional dependency array or deps getter
    * @returns {() => T} Getter for the current computed value
-   * @since 0.0.1
    *
    * @example
    * ```typescript
@@ -562,7 +555,6 @@ export interface ComponentContextBase<
    * @param {string} selector - CSS selector to match target elements
    * @param {function(Event, Element): void} handler - Handler function
    * @returns {() => void} Cleanup function to remove the delegation
-   * @since 0.2.0
    *
    * @example
    * ```typescript
@@ -610,7 +602,6 @@ type PluginExtensions<Plugins extends readonly ComponentPlugin<any>[]> =
  * @typedef {function} SetupFunction
  * @param {ComponentContext<Props, State, Actions, Refs, Ext>} context - Component context
  * @returns {() => string} Render function that returns HTML template string
- * @since 0.1.0
  *
  * @example
  * ```typescript
@@ -878,7 +869,6 @@ const interpolateTemplate = (
  * @see {@link ComponentContext} for available context properties
  * @see {@link ComponentOptions} for configuration options
  * @see {@link SetupFunction} for setup function signature
- * @since 0.1.0
  */
 function define<
   Props = Record<string, any>,

@@ -21,10 +21,35 @@ import '../styles/global.css';
     <Font cssVariable="--font-poppins" preload={true} />
   </head>
   <body>
+    <c-pointer></c-pointer>
     <div
       class="flex flex-col justify-center items-center min-h-[95vh] w-screen"
     >
-      <c-logo></c-logo>
+      <div class="relative z-10 scale-75 md:scale-100">
+        <svg
+          width="300"
+          height="300"
+          viewBox="0 0 749 749"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            x="2.00098"
+            y="3.00195"
+            width="744"
+            height="744"
+            rx="15"
+            fill="#222730"></rect>
+          <circle cx="374.5" cy="374.5" r="374.5" fill="#F0F6FC"></circle>
+        </svg>
+
+        <h1
+          class="big-title leading-none tracking-tighter mt-5"
+          style="font-family: var(--font-poppins); font-size: 85px;"
+        >
+          Scoped
+        </h1>
+      </div>
 
       <br />
 
@@ -59,18 +84,21 @@ import '../styles/global.css';
 </html>
 
 <script>
-  import '../components/c-logo.ts';
+  import { happy } from '@petit-kit/scoped';
   import '../components/c-table-content.ts';
   import '../components/c-content.ts';
+  import '../components/c-pointer.ts';
   import hljs from 'highlight.js/lib/core';
 
   import typescript from 'highlight.js/lib/languages/typescript';
   import bash from 'highlight.js/lib/languages/bash';
   import javascript from 'highlight.js/lib/languages/javascript';
+  import xml from 'highlight.js/lib/languages/xml';
 
   hljs.registerLanguage('typescript', typescript);
   hljs.registerLanguage('javascript', javascript);
   hljs.registerLanguage('bash', bash);
+  hljs.registerLanguage('xml', xml);
 
   hljs.configure({
     languages: ['typescript', 'ts', 'javascript', 'js', 'bash', 'sh'],
@@ -79,4 +107,7 @@ import '../styles/global.css';
   });
 
   hljs.highlightAll();
+
+  console.log(happy);
+  happy();
 </script>

@@ -27,12 +27,24 @@ export type WindowControls = {
     ) => void,
     options?: { immediate?: boolean }
   ) => () => void;
+  // Uses window "scroll" events; best for tracking scroll position.
+  // Example:
+  // const { onWindowScroll } = windowPlugin().extend(context, context);
+  // const stop = onWindowScroll((scrollX, scrollY) => {
+  //   console.log("scroll", scrollX, scrollY);
+  // });
+  // stop(); // unsubscribe
+  onWindowScroll: (
+    handler: (scrollX: number, scrollY: number, event: Event) => void,
+    options?: { immediate?: boolean }
+  ) => () => void;
 };
 
 export const windowPlugin = (): ComponentPlugin<WindowControls> => ({
   name: 'window',
   extend: (context: ComponentContextBase) => {
     const listeners = new Set<(event: UIEvent) => void>();
+    const scrollListeners = new Set<(event: Event) => void>();
     const observers = new Set<ResizeObserver>();
 
     const onViewportResize: WindowControls['onViewportResize'] = (
@@ -93,6 +105,26 @@ export const windowPlugin = (): ComponentPlugin<WindowControls> => ({
       };
     };
 
+    const onWindowScroll: WindowControls['onWindowScroll'] = (
+      handler: (scrollX: number, scrollY: number, event: Event) => void,
+      options = {}
+    ) => {
+      if (typeof window === 'undefined') return () => {};
+      const { immediate = true } = options;
+      const wrapped = (event: Event) => {
+        handler(window.scrollX, window.scrollY, event);
+      };
+      window.addEventListener('scroll', wrapped, { passive: true });
+      scrollListeners.add(wrapped);
+      if (immediate) {
+        wrapped(new Event('scroll'));
+      }
+      return () => {
+        window.removeEventListener('scroll', wrapped);
+        scrollListeners.delete(wrapped);
+      };
+    };
+
     context.onDestroy(() => {
       if (typeof window === 'undefined') return;
       for (const handler of listeners) {
@@ -103,8 +135,12 @@ export const windowPlugin = (): ComponentPlugin<WindowControls> => ({
         observer.disconnect();
       }
       observers.clear();
+      for (const handler of scrollListeners) {
+        window.removeEventListener('scroll', handler);
+      }
+      scrollListeners.clear();
     });
 
-    return { onViewportResize, onWindowResize };
+    return { onViewportResize, onWindowResize, onWindowScroll };
   },
 });

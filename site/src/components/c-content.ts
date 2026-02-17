@@ -19,7 +19,9 @@ define('c-content', {}, () => {
         .map(
           (item: { Title: string; content: string }) => /*html*/ `
         <div>
-          <h2 class="sub-title" id="${item.Title}">${item.Title}</h2>
+          <h2 class="sub-title" id="${item.Title}">
+            ${item.Title}
+          </h2>
           <br />
           <div>${item.content}</div>
         </div>

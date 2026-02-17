@@ -6,7 +6,7 @@
 <br />
 <br />
 
-# Scoped - 0.0.3
+# Scoped - 0.0.5
 
 ### A lightweight, framework-agnostic library for building web components with reactive state, bindings, lifecycle hooks, template-based rendering and plugins.
 
@@ -179,9 +179,12 @@ return () => `
 Use `on:eventName="handler"` to bind events, where `handler` is a function from your `actions` object or setup context:
 
 ```typescript
-return () => `
-  <button on:click="actions.save">Save</button>
-`;
+({ actions }) => {
+  actions.addThing = () => console.log('addThing');
+  return () => `
+    <button on:click="addThing">Add thing</button>
+  `;
+};
 ```
 
 Arrow functions or direct expressions are not supported; you must use named action references.
@@ -241,6 +244,10 @@ You can update state in two main ways:
 - `host.updateState(partial)`: Merges the partial state and only schedules effects/computed, but does NOT re-render the template.
 
 ```typescript
+// Initialize state in setup (no re-render)
+state.count = 0;
+state.status = 'idle';
+
 // Initialize state in setup (optional)
 host.setState({ count: 0, status: 'idle' });
 
@@ -479,7 +486,7 @@ Lifecycle hooks let you run code at specific moments in the component's life, su
 
 # Plugins
 
-Scoped includes a set of optional plugins to extend or enhance component behavior. You can import any of these plugins and register them via the `plugins` option or the `use()` method.
+Scoped includes a set of optional plugins to extend or enhance component behavior. You can import any of these plugins and register them via the `plugins` option.
 
 **Available Plugins:**
 
@@ -506,6 +513,9 @@ Scoped includes a set of optional plugins to extend or enhance component behavio
 
 - **[mousePlugin](src/plugins/mouse/README.md)**  
   Tracks mouse position, mouse events, and allows you to listen to wheel/pointer activity.
+
+- **[pointerPlugin](src/plugins/pointer/README.md)**  
+  Lerp mouse position
 
 **Usage Example:**
 

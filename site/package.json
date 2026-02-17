@@ -11,15 +11,13 @@
     "deploy:full": "pnpm build && pnpm deploy"
   },
   "dependencies": {
-    "@petit-kit/scoped": "^0.0.3",
+    "@petit-kit/scoped": "^0.0.5",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.17.1",
     "highlight.js": "^11.11.1",
-    "matter-js": "^0.20.0",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@types/matter-js": "^0.20.0",
     "gh-pages": "^6.3.0"
   }
 }
