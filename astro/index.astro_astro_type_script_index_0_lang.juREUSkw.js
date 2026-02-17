@@ -618,6 +618,12 @@ define(
       <br />
       <br />
       See each plugin's README for API docs, options, and usage examples.
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
     `}];Pe("c-table-content",{},()=>()=>`
     <div class="flex flex-col gap-2 w-[180px] mt-5">
       ${ft.map(n=>`
