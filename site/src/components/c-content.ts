@@ -10,16 +10,16 @@ define('c-content', {}, () => {
       }
       return acc;
     },
-    [] as { Title: string; content: string }[]
+    [] as { Title: string; content: string; slug: string }[]
   );
 
   return () => /*html*/ `
     <div class="max-w-[calc(100vw-20px)]">
       ${parts
         .map(
-          (item: { Title: string; content: string }) => /*html*/ `
-        <div>
-          <h2 class="sub-title" id="${item.Title}">
+          (item: { Title: string; content: string; slug: string }) => /*html*/ `
+        <div class="content" id="${item.slug}">
+          <h2 class="sub-title">
             ${item.Title}
           </h2>
           <br />

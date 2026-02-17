@@ -64,8 +64,10 @@ const SCOPE_VERSION = '0.0.5';
  * Useful for debugging or confirming library presence.
  */
 export const happy = () => {
-  console.info('The website is using @petit-kit/scoped v' + SCOPE_VERSION);
-  console.info('https://github.com/petit-kit/scoped');
+  console.info(
+    'The website is using @petit-kit/scoped v' + SCOPE_VERSION,
+    '\nhttps://github.com/petit-kit/scoped'
+  );
 };
 
 /**

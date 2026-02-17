@@ -55,10 +55,10 @@ pre code.hljs {
   font-size: 10px;
 
   code {
-    @apply px-0 md:px-[20px];
-    @apply text-[10px] md:text-[12px] xl:text-[16px];
+    @apply px-[10px] md:px-[20px];
+    @apply text-[12px] md:text-[12px] xl:text-[16px];
     @apply border border-black/10;
-    @apply ml-0 md:ml-[-20px];
+    @apply ml-[-10px] md:ml-[-20px];
   }
 }
 
@@ -134,6 +134,5 @@ pre code.hljs {
 
   .nav-active {
     @apply font-semibold;
-    color: var(--select-background);
   }
 }

@@ -84,11 +84,12 @@ import '../styles/global.css';
 </html>
 
 <script>
+  import hljs from 'highlight.js/lib/core';
   import { happy } from '@petit-kit/scoped';
   import '../components/c-table-content.ts';
   import '../components/c-content.ts';
   import '../components/c-pointer.ts';
-  import hljs from 'highlight.js/lib/core';
+  import '../components/c-logo.ts';
 
   import typescript from 'highlight.js/lib/languages/typescript';
   import bash from 'highlight.js/lib/languages/bash';
@@ -108,6 +109,5 @@ import '../styles/global.css';
 
   hljs.highlightAll();
 
-  console.log(happy);
   happy();
 </script>

@@ -1,6 +1,7 @@
 const content = [
   {
     Title: 'Introduction',
+    slug: 'introduction',
     content: `
       <strong>Scoped</strong> is a lightweight library designed to simplify the creation of web components.
       <br />
@@ -13,6 +14,7 @@ const content = [
   },
   {
     Title: 'Installation',
+    slug: 'installation',
     content: `
       To install <strong>Scoped</strong>, you can use your favorite package manager.
       <br />
@@ -27,6 +29,7 @@ pnpm install @petit-kit/scoped</code>
   },
   {
     Title: 'Getting started',
+    slug: 'getting-started',
     content: `
       To get started with <strong>Scoped</strong>, you can create a new component using the <strong>define</strong> function.
       <br />
@@ -72,6 +75,7 @@ define(
     children: [
       {
         Title: 'Component options',
+        slug: 'component-options',
         content: `
           The <strong>ComponentOptions</strong> is the options for the component:
 
@@ -92,6 +96,7 @@ define(
       },
       {
         Title: 'Setup function',
+        slug: 'setup-function',
         content: `
           The <strong>SetupFunction</strong> is run only once on mount and should return a function that return a template string.
 
@@ -165,6 +170,7 @@ define(
       },
       {
         Title: 'Templating',
+        slug: 'templating',
         content: `
           Inside your setup function, you can return a function that uses template literals for HTML generation.
 
@@ -283,6 +289,7 @@ define(
       },
       {
         Title: 'State & props',
+        slug: 'state-and-props',
         content: `
           <br />
           <p class="sub-title-small">
@@ -403,6 +410,7 @@ component.setProps({ data: largeArray, config: complexObject });</code>
       },
       {
         Title: 'Effects',
+        slug: 'effects',
         content: `
           Effects are functions that run in response to reactive changes and can be used for side effects, subscriptions, or manual cleanup logic within your components.
           <br />
@@ -434,6 +442,7 @@ component.setProps({ data: largeArray, config: complexObject });</code>
       },
       {
         Title: 'Computed',
+        slug: 'computed',
         content: `
           Computed values are memoized values used to derive data from state or props and automatically update when their dependencies change.
           <br />
@@ -451,6 +460,7 @@ component.setProps({ data: largeArray, config: complexObject });</code>
       },
       {
         Title: 'Custom events',
+        slug: 'custom-events',
         content: `
           Custom events are a way to communicate between components.
           <br />
@@ -490,6 +500,7 @@ component.addEventListener('my-event', (e) => {
       },
       {
         Title: 'Event delegation',
+        slug: 'event-delegation',
         content: `
           <strong>delegate</strong> lets you efficiently handle events on descendants matching a selector:
           <br />
@@ -516,6 +527,7 @@ component.addEventListener('my-event', (e) => {
       },
       {
         Title: 'Slots',
+        slug: 'slots',
         content: `
           Slots allow you to render children inside your custom element, making it easy to compose interfaces or pass in dynamic content.
           <br />
@@ -545,6 +557,7 @@ component.addEventListener('my-event', (e) => {
       },
       {
         Title: 'Lifecycle ',
+        slug: 'lifecycle',
         content: `
           Lifecycle hooks let you run code at specific moments in the component's life, such as mount, update, or destruction.
           <br />
@@ -590,6 +603,7 @@ component.addEventListener('my-event', (e) => {
   },
   {
     Title: 'Plugins',
+    slug: 'plugins',
     content: `
       Plugins are a way to extend the functionality of your component.
       <br />
