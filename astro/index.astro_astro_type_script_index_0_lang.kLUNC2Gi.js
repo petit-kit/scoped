@@ -589,6 +589,9 @@ component.addEventListener('my-event', (e) => {
         <br />
         <br />
         <strong>mousePlugin</strong> - Tracks mouse position, mouse events, and allows you to listen to wheel/pointer activity.
+        <br />
+        <br />
+        <strong>pointerPlugin</strong> - Lerp mouse position
       </div>
       <br />
       <strong class="italic">⏲ Document is working in progress</strong>
