@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "deploy": "gh-pages -d dist --dotfiles",
-    "deploy:full": "pnpm build && pnpm deploy"
+    "deploy:full": "pnpm build && pnpm run deploy"
   },
   "dependencies": {
     "@petit-kit/scoped": "^0.0.6",

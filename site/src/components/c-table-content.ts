@@ -69,6 +69,13 @@ define(
       `
         )
         .join('')}
+        <a class="opacity-50 hover:opacity-100 transition-all duration-300 hover:font-bold" href="https://github.com/petit-kit/scoped" target="_blank">
+          Github
+        </a>
+        <a class="opacity-50 hover:opacity-100 transition-all duration-300 hover:font-bold" href="https://www.npmjs.com/package/@petit-kit/scoped" target="_blank">
+          NPM
+        </a>
+      
       </div>
     `;
   }

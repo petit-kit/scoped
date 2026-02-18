@@ -19,15 +19,15 @@ define(
     };
 
     return () => `
-    <div>
-      <input
-        type="range" min="0" max="100" step="1"
-        bind:value="value"
-        on:input="handleChange"
-      />
-      <c-number ref="number" bind:value="value"></c-number>
-    </div>
-  `;
+      <div>
+        <input
+          type="range" min="0" max="100" step="1"
+          bind:value="value"
+          on:input="handleChange"
+        />
+        <c-number ref="number" bind:value="value"></c-number>
+      </div>
+    `;
   }
 );
 ```

@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
+import { version } from '../version/index.js';
+
 const OUTPUT_FILE = join(import.meta.dirname, '../README.md');
 
 const content = [
@@ -31,7 +33,7 @@ const parts = content.map((file) => {
   const content = readFileSync(file, 'utf8');
   return {
     title: file.split('_')[0],
-    content,
+    content: content.replace('{VERSION}', version),
   };
 });
 
