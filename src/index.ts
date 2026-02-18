@@ -4,7 +4,7 @@ export * from './plugins';
  * Scope - A lightweight, framework-agnostic library for building web components
  *
  * @module scope
- * @version 0.0.5
+ * @version 0.0.6
  * @description Provides a minimal abstraction over Custom Elements API, making it easy
  * to create reusable, encapsulated components with reactive state, lifecycle hooks,
  * and a simple template-based rendering system.
@@ -57,7 +57,7 @@ export * from './plugins';
  *
  * @constant {string}
  */
-const SCOPE_VERSION = '0.0.5';
+const SCOPE_VERSION = '0.0.6';
 
 /**
  * Logs version and repository info for @petit-kit/scoped.

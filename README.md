@@ -6,7 +6,7 @@
 <br />
 <br />
 
-# Scoped - 0.0.5
+# Scoped - 0.0.6
 
 ### A lightweight, framework-agnostic library for building web components with reactive state, bindings, lifecycle hooks, template-based rendering and plugins.
 
