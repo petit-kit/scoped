@@ -34,7 +34,9 @@ It encourages expressiveness and rapid prototyping, giving you fine-grained cont
   - [Event Delegation](#event-delegation)
   - [Slots](#slots)
   - [Lifecycle](#lifecycle)
+  - [Selection](#select)
 - [Plugins](#plugins)
+- [Happy](#happy)
 
 <br />
 <br />
@@ -484,6 +486,33 @@ Lifecycle hooks let you run code at specific moments in the component's life, su
 | `onFirstUpdate(cb)`  | Once, after first render |
 | `onPropsChanged(cb)` | When props change        |
 
+## Select
+
+The `$` method lets you query elements inside your component's shadow or light DOM, returning either a single element or an array (if multiple elements match).
+
+
+```typescript
+define('c-my-component', {}, ({ $, host }) => {
+  onMount(() => {
+    const btn = $('button.primary'); // single element or null
+    const items = $('.list-item'); // array when multiple match
+    
+    // From outside via host element:
+    const el = document.querySelector('c-my-component'); // self
+    const inner = el.$('.list-item'); // same API on host
+  });
+  return () => `<div>
+    <button class="primary">OK</button>
+    <span class="list-item">
+      A
+    </span>
+    <span class="list-item">
+      B
+    </span>
+  </div>`;
+});
+```
+
 # Plugins
 
 Scoped includes a set of optional plugins to extend or enhance component behavior. You can import any of these plugins and register them via the `plugins` option.
@@ -538,3 +567,14 @@ define(
 All plugins are tree-shakeable—import only what you need.
 
 See each plugin's README (linked above) for API docs, options, and usage examples.
+
+
+# Happy
+
+The `happy` method logs a friendly version and repo message to your console—call it in your app to show appreciation and support for Scoped!
+
+```javascript
+import { happy } from '@petit-kit/scoped';
+
+happy() // 🙂🙃🙂🙃🙂🙃🙂
+```
