@@ -4,7 +4,7 @@ export * from './plugins';
  * Scope - A lightweight, framework-agnostic library for building web components
  *
  * @module scope
- * @version 0.0.5
+ * @version 0.0.6
  * @description Provides a minimal abstraction over Custom Elements API, making it easy
  * to create reusable, encapsulated components with reactive state, lifecycle hooks,
  * and a simple template-based rendering system.
@@ -57,7 +57,7 @@ export * from './plugins';
  *
  * @constant {string}
  */
-const SCOPE_VERSION = '0.0.5';
+const SCOPE_VERSION = '0.0.6';
 
 /**
  * Logs version and repository info for @petit-kit/scoped.
@@ -329,6 +329,21 @@ export interface ComponentHost {
    * ```
    */
   remove: () => void;
+  /**
+   * Select DOM elements within the component.
+   * Returns a single element, or an array of elements if multiple match.
+   * @method $
+   * @param {string} selector - CSS selector to match elements
+   * @returns {Element | Element[] | null} Single element, array of elements, or null if none match
+   *
+   * @example
+   * ```typescript
+   * const btn = host.$('button.primary');        // single element or null
+   * const items = host.$('.list-item');          // array when multiple match
+   * const first = Array.isArray(items) ? items[0] : items;
+   * ```
+   */
+  $: (selector: string) => Element | Element[] | null;
 }
 
 /**
@@ -449,6 +464,21 @@ export interface ComponentContextBase<
    * ```
    */
   updateState: (partial: Partial<State>) => void;
+  /**
+   * Select DOM elements within the component.
+   * Returns a single element, or an iterable array if multiple match.
+   * @method $
+   * @param {string} selector - CSS selector to match elements
+   * @returns {Element | Element[] | null} Single element, array of elements, or null if none match
+   *
+   * @example
+   * ```typescript
+   * const btn = $('button.primary');        // single element or null
+   * const items = $('.list-item');          // array when multiple match
+   * for (const el of Array.isArray(items) ? items : (items ? [items] : [])) { ... }
+   * ```
+   */
+  $: (selector: string) => Element | Element[] | null;
   /**
    * The component host element with all host methods
    * @type {HTMLElement & ComponentHost}
@@ -1061,6 +1091,7 @@ function define<
       this.update = this.update.bind(this);
       this.forceRender = this.forceRender.bind(this);
       this.destroy = this.destroy.bind(this);
+      this.$ = this.$.bind(this);
 
       // Initialize render and scheduling state
       this._render = null;
@@ -1263,6 +1294,7 @@ function define<
             emit: this.emit,
             listen: this.listen,
             updateState: this.updateState.bind(this),
+            $: this.$,
             host: this as any,
             // Lifecycle hook registration functions
             onMount: (cb) => this._onMount.push(cb),
@@ -1432,6 +1464,28 @@ function define<
      */
     remove(): void {
       super.remove();
+    }
+
+    /**
+     * Select DOM elements within the component.
+     * Returns a single element, or an array of elements if multiple match.
+     *
+     * @method $
+     * @param {string} selector - CSS selector to match elements
+     * @returns {Element | Element[] | null} Single element, array of elements, or null if none match
+     *
+     * @example
+     * ```typescript
+     * const btn = host.$('button.primary');   // single element or null
+     * const items = host.$('.list-item');     // array when multiple match
+     * ```
+     */
+    $(selector: string): Element | Element[] | null {
+      const root = this._root as ParentNode;
+      const nodes = root.querySelectorAll(selector);
+      if (nodes.length === 0) return null;
+      if (nodes.length === 1) return nodes[0];
+      return Array.from(nodes);
     }
 
     /**

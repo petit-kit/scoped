@@ -46,6 +46,40 @@ body {
   color: var(--select-color);
 }
 
+p {
+  margin-bottom: 1lh;
+  text-wrap: pretty;
+}
+
+ul {
+  margin-top: 1lh;
+  margin-bottom: 1lh;
+}
+
+h1,
+h2,
+h3,
+h4,
+li {
+  margin-bottom: 0.5lh;
+}
+
+ul {
+  @apply px-[5px] md:px-[10px];
+}
+
+pre {
+  margin-bottom: 2lh;
+}
+
+code {
+  padding: 4px 8px;
+  background-color: white;
+  border-radius: 4px;
+  @apply border border-black/10;
+  font-weight: 500;
+}
+
 pre,
 pre code,
 pre code.hljs {
@@ -57,7 +91,6 @@ pre code.hljs {
   code {
     @apply px-[10px] md:px-[20px];
     @apply text-[12px] md:text-[12px] xl:text-[16px];
-    @apply border border-black/10;
     @apply ml-[-10px] md:ml-[-20px];
   }
 }
@@ -82,6 +115,8 @@ pre code.hljs {
     line-height: 140%;
   }
 
+  h1,
+  h2,
   .sub-title {
     font-weight: normal;
     letter-spacing: 0.05em;
@@ -89,11 +124,20 @@ pre code.hljs {
     font-size: min(5vi, 2.5rem);
   }
 
+  h3,
   .sub-title-small {
     font-weight: normal;
     letter-spacing: 0.05em;
     line-height: 140%;
     font-size: min(4vi, 1.5rem);
+  }
+
+  h4,
+  .sub-title-small-small {
+    font-weight: normal;
+    letter-spacing: 0.05em;
+    line-height: 140%;
+    font-size: min(3vi, 1.25rem);
   }
 
   .text-content-narrow {
@@ -115,20 +159,20 @@ pre code.hljs {
     position: relative;
   }
 
-  .doc-table {
+  table {
     @apply w-full table-auto border-collapse overflow-hidden;
   }
 
-  .doc-table th,
-  .doc-table td {
+  table th,
+  table td {
     @apply px-4 py-3 text-left border border-gray-200;
   }
 
-  .doc-table th {
+  table th {
     @apply font-semibold bg-gray-100;
   }
 
-  .doc-table tbody tr:hover {
+  table tbody tr:hover {
     @apply bg-gray-50;
   }
 

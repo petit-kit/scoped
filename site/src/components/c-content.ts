@@ -1,7 +1,19 @@
 import { define } from '@petit-kit/scoped';
-import content from '../content/index';
+import content from '../content/parts';
+import markdownit from 'markdown-it';
+
+function removeLeadingBr(str: string): string {
+  const brRegex = /^\s*<br\s*\/?>/i;
+  return str.replace(brRegex, '');
+}
 
 define('c-content', {}, () => {
+  const md = markdownit({
+    html: true,
+    linkify: true,
+    typographer: true,
+  });
+
   const parts = content.reduce(
     (acc, item: any) => {
       acc.push(item);
@@ -10,20 +22,16 @@ define('c-content', {}, () => {
       }
       return acc;
     },
-    [] as { Title: string; content: string; slug: string }[]
+    [] as { title: string; content: string; slug: string }[]
   );
 
   return () => /*html*/ `
     <div class="max-w-[calc(100vw-20px)]">
       ${parts
         .map(
-          (item: { Title: string; content: string; slug: string }) => /*html*/ `
+          (item: { title: string; content: string; slug: string }) => /*html*/ `
         <div class="content" id="${item.slug}">
-          <h2 class="sub-title">
-            ${item.Title}
-          </h2>
-          <br />
-          <div>${item.content}</div>
+          ${md.render(item.content.trim())}
         </div>
       `
         )
