@@ -10,7 +10,7 @@
 
 ### A lightweight, framework-agnostic library for building web components with reactive state, bindings, lifecycle hooks, template-based rendering and plugins.
 
-**4.1 Kb** Gzipped - **12.7kb** Minified
+**4.2 Kb** Gzipped - **12.7kb** Minified
 
 <br />
 
@@ -43,6 +43,8 @@ It encourages expressiveness and rapid prototyping, giving you fine-grained cont
 
 # Installation
 
+To install **Scoped**, you can use your favorite package manager.
+
 ```bash
 npm install @petit-kit/scoped
 # or
@@ -52,6 +54,8 @@ pnpm install @petit-kit/scoped
 ```
 
 # Getting started
+
+To get started with **Scoped**, you can create a new component using the `define` function.
 
 ```javascript
 import { define } from '@petit-kit/scoped';
@@ -139,29 +143,30 @@ The `SetupFunction` is run only once on mount and should return a function that 
 
 `host` is the component itself, it got those methods:
 
-| Method                      | Description                                |
-| --------------------------- | ------------------------------------------ |
-| `host.setState(partial)`    | Update state + full re-render              |
-| `host.updateState(partial)` | Update state, effects only (no re-render)  |
-| `host.setProps(partial)`    | Update props programmatically              |
-| `host.scheduleUpdate()`     | Schedule effects on next RAF               |
-| `host.update(fullRender)`   | Force update (full or partial)             |
-| `host.forceRender()`        | Force re-render even if template unchanged |
-| `host.destroy()`            | Clean up and run destroy callbacks         |
+| Method                        | Description                                |
+| ----------------------------- | ------------------------------------------ |
+| **host.setState(partial)**    | Update state + full re-render              |
+| **host.updateState(partial)** | Update state, effects only (no re-render)  |
+| **host.setProps(partial)**    | Update props programmatically              |
+| **host.scheduleUpdate()**     | Schedule effects on next RAF               |
+| **host.update(fullRender)**   | Force update (full or partial)             |
+| **host.forceRender()**        | Force re-render even if template unchanged |
+| **host.destroy()**            | Clean up and run destroy callbacks         |
 
 ## Templating
 
-Templates in this framework are just functions that return a string of HTML. Inside your setup function, you can return a function — known as the template function — that uses template literals for HTML generation.
+Inside your setup function, you can return a function that uses template literals for HTML generation.
 
 ### Basic Example
 
 ```typescript
-return () => `
-  <div>
-    <h2>Hello, ${props.name}!</h2>
-    <button on:click="actions.addThing">Add thing</button>
-  </div>
-`;
+() => {
+  return () => `
+    <div>
+      <h2>Hello, ${props.name}!</h2>
+    </div>
+  `;
+};
 ```
 
 ### Dynamic Content
@@ -169,16 +174,24 @@ return () => `
 Interpolation with `${...}` gives you access to state, props, or anything in closure:
 
 ```typescript
-return () => `
-  <ul>
-    ${state.items.map((item) => `<li>${item.title}</li>`).join('')}
-  </ul>
-`;
+() => {
+  return () => `
+    <ul>
+      ${state.items
+        .map(
+          (item) => `
+        <li>${item.title}</li>
+      `
+        )
+        .join('')}
+    </ul>
+  `;
+};
 ```
 
 ### Event Handlers
 
-Use `on:eventName="handler"` to bind events, where `handler` is a function from your `actions` object or setup context:
+Use `on:eventName="handler"` to bind events, where **handler** is a function from your **actions** object or setup context:
 
 ```typescript
 ({ actions }) => {
@@ -189,16 +202,19 @@ Use `on:eventName="handler"` to bind events, where `handler` is a function from 
 };
 ```
 
-Arrow functions or direct expressions are not supported; you must use named action references.
+Arrow functions or direct expressions are not supported, you must use named action references.
 
 ### Referencing DOM Elements
 
 Use the `ref` attribute to assign references:
 
 ```typescript
-return () => `
-  <input ref="inputEl" type="text">
-`;
+({ onMount, refs }) => {
+  onMount(() => console.log(refs.inputElement));
+  return () => `
+    <input ref="inputElement" type="text"></input>
+  `;
+};
 ```
 
 You can then access the element as `refs.inputEl` in your setup code or methods.
@@ -206,16 +222,6 @@ You can then access the element as `refs.inputEl` in your setup code or methods.
 ### Bindings
 
 Bindings let you connect the value of a DOM property or attribute to your component's state or props, making the element update reactively when the state changes, and optionally syncing changes back to your state.
-
-#### Value Binding
-
-For `<input>`, `<textarea>`, and `<select>`, use `bind:value="stateKey"` to bind the value to a property in your `state`. When the user edits the input, the component will automatically update that property.
-
-```typescript
-return () => `
-  <input bind:value="message">
-`;
-```
 
 #### Supported Bindings
 
@@ -225,13 +231,22 @@ return () => `
 - `bind:checked="isChecked"` — Binds the checked property of checkbox/radio
 - `bind:prop="key"` — Generic property binding (any property, e.g. `bind:min`, `bind:max`)
 
-#### Example: Checkbox
+<br />
 
 ```typescript
-return () => `
-  <input type="checkbox" bind:checked="done">
-  <label>${state.done ? 'Complete' : 'Incomplete'}</label>
-`;
+({ state }) => {
+  state.textValue = 'Hello, world!';
+  state.htmlValue = `<strong>Hello, world!</strong>`;
+  state.isChecked = true;
+  state.styleValue = `background-color: red;`;
+
+  return () => `
+    <p bind:text="textValue"></p>
+    <p bind:html="htmlValue"></p>
+    <input type="checkbox" bind:checked="isChecked">
+    <div bind:style="styleValue"></div>
+  `;
+};
 ```
 
 ## State & props
@@ -242,8 +257,8 @@ State is a plain object that belongs to your component instance. It is fully rea
 
 You can update state in two main ways:
 
-- `host.setState(partial)`: Merges the partial state and triggers a full re-render.
-- `host.updateState(partial)`: Merges the partial state and only schedules effects/computed, but does NOT re-render the template.
+- `host.setState(partial)` - Merges the partial state and triggers a full re-render.
+- `host.updateState(partial)` - Merges the partial state and only schedules effects/computed, but does **NOT** re-render the template.
 
 ```typescript
 // Initialize state in setup (no re-render)
@@ -282,7 +297,7 @@ Props are available as the `props` object in the setup function:
 
 ```javascript
 define(
-  'c-my-thing',
+  'c-my-component',
   {
     props: {
       value: { type: Number, default: 10 },
@@ -291,9 +306,9 @@ define(
   },
   ({ props }) => {
     return () => `
-    <p>Value: ${props.value}</p>
-    <span>${props.label}</span>
-  `;
+      <p>Value: ${props.value}</p>
+      ${props.label}
+    `;
   }
 );
 ```
@@ -302,7 +317,7 @@ Props are always kept up to date with attribute changes, and updating props from
 
 **Two-way Binding:**
 
-Scoped allows props <=> state syncing using the `link` helper:
+Scoped allows **props** ↔️ **state** syncing using the `link` helper:
 
 ```typescript
 ({ link }) => {
@@ -324,31 +339,42 @@ This updates the prop, reflects it as an attribute if needed, and triggers all u
 
 Props are also automatically parsed from their attribute string values into the appropriate type, based on your definition (Number, Boolean, etc.), so you always work with type-safe values in your setup and template logic.
 
+**Setting large objects/arrays as props:**
+
+You can set large objects/arrays as props by using the `host.setProps(...)` method:
+
+```typescript
+const component = document.querySelector('c-my-component');
+component.setProps({ data: largeArray, config: complexObject });
+```
+
 ## Effects
 
 Effects are functions that run in response to reactive changes and can be used for side effects, subscriptions, or manual cleanup logic within your components.
 
 ```typescript
-// Run on every render
-effect(() => console.log('Rendered'));
+({ effect }) => {
+  // Run on every render
+  effect(() => console.log('Rendered'));
 
-// Run once (empty deps)
-effect(() => {
-  const sub = api.subscribe();
-  return () => sub.unsubscribe();
-}, []);
+  // Run once (empty deps)
+  effect(() => {
+    const sub = api.subscribe();
+    return () => sub.unsubscribe();
+  }, []);
 
-// Run when deps change
-effect(
-  (deps) => console.log('Count:', deps[0]),
-  () => [state.count]
-);
+  // Run when deps change
+  effect(
+    (deps) => console.log('Count:', deps[0]),
+    () => [state.count]
+  );
 
-// Manual cleanup
-const cleanup = effect(() => {
-  /* ... */
-});
-cleanup();
+  // Manual cleanup
+  const cleanup = effect(() => {
+    /* ... */
+  });
+  cleanup();
+};
 ```
 
 ## Computed
@@ -356,36 +382,36 @@ cleanup();
 Computed values are memoized values used to derive data from state or props and automatically update when their dependencies change.
 
 ```typescript
-const fullName = computed(
-  () => `${state.firstName} ${state.lastName}`,
-  () => [state.firstName, state.lastName]
-);
-return () => `<p>Name: ${fullName()}</p>`;
+({ computed }) => {
+  const fullName = computed(
+    () => `${state.firstName} ${state.lastName}`, // getter
+    () => [state.firstName, state.lastName] // dependencies
+  );
+  return () => `<p>Name: ${fullName()}</p>`;
+};
 ```
 
 ## Custom events
+
+Custom events are a way to communicate between components.
 
 ### Emit
 
 To emit a custom event from your component, use `emit(name, detail?)`:
 
 ```typescript
-actions.handleButtonClick = () => {
-  host.emit('my-event', { message: 'Hello from the component!' });
+({ emit }) => {
+  emit('my-event', { message: 'Hello from the component!' });
 };
-
-return () => `<button on:click="handleButtonClick">Emit Event</button>`;
 ```
 
-**Listening to custom events in parent:**
+Listening to custom events in parent:
 
 ```javascript
-<my-component id="c1"></my-component>
-<script>
-  document.getElementById('c1').addEventListener('my-event', (e) => {
-    console.log('Received:', e.detail.message);
-  });
-</script>
+const component = document.querySelector('c-my-component');
+component.addEventListener('my-event', (e) => {
+  console.log('Received:', e.detail.message);
+});
 ```
 
 ### Listen
@@ -393,114 +419,89 @@ return () => `<button on:click="handleButtonClick">Emit Event</button>`;
 You can use `listen` to subscribe to events on any EventTarget (automatically cleaned up on destroy):
 
 ```typescript
-onMount(() => {
-  // Listen to a custom event emitted by another component
-  listen(
-    someOtherElement, // can be `window`
-    'my-event',
-    (e) => {
-      console.log('Got custom event with detail:', e.detail);
-    }
-  );
-});
+({ listen }) => {
+  listen(window, 'my-event', (e) => {
+    console.log('Received:', e.detail.message);
+  });
+};
 ```
 
----
-
-### Event Delegation
+## Event Delegation
 
 `delegate` lets you efficiently handle events on descendants matching a selector:
 
 ```typescript
-onMount(() => {
-  delegate('click', '.item', (e, target) => {
-    console.log('Clicked item:', target.textContent);
-    target.classList.toggle('active');
+({ onMount, delegate }) => {
+  onMount(() => {
+    delegate('click', '.item', (e, target) => {
+      console.log('Clicked item:', target.textContent);
+      target.classList.toggle('active');
+    });
   });
-});
 
-return () => `
-  <ul>
-    <li class="item">Apple</li>
-    <li class="item">Banana</li>
-    <li class="item">Cherry</li>
-  </ul>
-`;
+  return () => `
+    <ul>
+      <li class="item">Apple</li>
+      <li class="item">Banana</li>
+      <li class="item">Cherry</li>
+    </ul>
+  `;
+};
 ```
 
 ## Slots
 
 Slots allow you to render children inside your custom element, making it easy to compose interfaces or pass in dynamic content.
 
-### Basic Usage
-
 By default, any child content placed inside your component tag will be rendered in the default slot:
 
 ```html
-<my-card>
-  <h2>Title goes here</h2>
-  <p>Some description or content.</p>
-</my-card>
+<c-my-component>
+  <h2 slot="title">Title goes here</h2>
+  <p slot="description">Some description or content.</p>
+</c-my-component>
 ```
 
 In your component template, use:
 
 ```typescript
-return () => `
-  <div class="card">
-    <slot></slot> <!-- default slot -->
-  </div>
-`;
-```
-
-### Named Slots
-
-Named slots let your users provide content for specific areas:
-
-```html
-<my-layout>
-  <div slot="sidebar">Sidebar content</div>
-  <div slot="main">Main content</div>
-</my-layout>
-```
-
-In your component:
-
-```typescript
-return () => `
-  <aside><slot name="sidebar"></slot></aside>
-  <main><slot name="main"></slot></main>
-`;
+define('my-card', {}, () => {
+  return () => `
+    <aside><slot name="title"></slot></aside>
+    <main><slot name="description"></slot></main>
+    <slot></slot>
+  `;
+});
 ```
 
 ## Lifecycle
 
 Lifecycle hooks let you run code at specific moments in the component's life, such as mount, update, or destruction.
 
-| Method               | Description              |
-| -------------------- | ------------------------ |
-| `onMount(cb)`        | After mount              |
-| `onDestroy(cb)`      | On destroy               |
-| `onUpdate(cb)`       | After each update        |
-| `onBeforeUpdate(cb)` | Before each update       |
-| `onFirstUpdate(cb)`  | Once, after first render |
-| `onPropsChanged(cb)` | When props change        |
+| Method                   | Description              |
+| ------------------------ | ------------------------ |
+| **`onMount(cb)`**        | After mount              |
+| **`onDestroy(cb)`**      | On destroy               |
+| **`onUpdate(cb)`**       | After each update        |
+| **`onBeforeUpdate(cb)`** | Before each update       |
+| **`onFirstUpdate(cb)`**  | Once, after first render |
+| **`onPropsChanged(cb)`** | When props change        |
 
 ## Select
 
 The `$` method lets you query elements inside your component's shadow or light DOM, returning either a single element or an array (if multiple elements match).
-
 
 ```typescript
 define('c-my-component', {}, ({ $, host }) => {
   onMount(() => {
     const btn = $('button.primary'); // single element or null
     const items = $('.list-item'); // array when multiple match
-    
+
     // From outside via host element:
     const el = document.querySelector('c-my-component'); // self
     const inner = el.$('.list-item'); // same API on host
   });
+
   return () => `<div>
     <button class="primary">OK</button>
     <span class="list-item">
@@ -516,6 +517,8 @@ define('c-my-component', {}, ({ $, host }) => {
 # Plugins
 
 Scoped includes a set of optional plugins to extend or enhance component behavior. You can import any of these plugins and register them via the `plugins` option.
+
+⏲ Document is working in progress
 
 **Available Plugins:**
 
@@ -549,8 +552,7 @@ Scoped includes a set of optional plugins to extend or enhance component behavio
 **Usage Example:**
 
 ```javascript
-import { define } from '@petit-kit/scoped';
-import { inViewPlugin, timerPlugin } from '@petit-kit/scoped/plugins';
+import { define, inViewPlugin, timerPlugin } from '@petit-kit/scoped';
 
 define(
   'my-component',
@@ -568,7 +570,6 @@ All plugins are tree-shakeable—import only what you need.
 
 See each plugin's README (linked above) for API docs, options, and usage examples.
 
-
 # Happy
 
 The `happy` method logs a friendly version and repo message to your console—call it in your app to show appreciation and support for Scoped!
@@ -576,5 +577,5 @@ The `happy` method logs a friendly version and repo message to your console—ca
 ```javascript
 import { happy } from '@petit-kit/scoped';
 
-happy() // 🙂🙃🙂🙃🙂🙃🙂
+happy(); // 🙂🙃🙂🙃🙂🙃🙂
 ```

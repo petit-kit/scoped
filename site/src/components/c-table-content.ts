@@ -1,5 +1,5 @@
 import { define, windowPlugin } from '@petit-kit/scoped';
-import content from '../content/index';
+import parts from '../content/parts';
 
 define(
   'c-table-content',
@@ -34,30 +34,30 @@ define(
 
     return () => /*html*/ `
     <div class="flex flex-col gap-2 w-[180px] mt-5">
-      ${content
+      ${parts
         .map(
           (item: {
             slug: string;
-            Title: string;
+            title: string;
             content: string;
-            children?: { Title: string; slug: string; content: string }[];
+            children?: { title: string; slug: string; content: string }[];
           }) => /*html*/ `
         <div>
           <a href="#${item.slug}" id="${item.slug + '-link'}" class="link hover:font-bold inline-block w-full">
-            ${item.Title}
+            ${item.title}
           </a>
           ${
             item.children
               ? item.children
                   .map(
                     (child: {
-                      Title: string;
+                      title: string;
                       slug: string;
                       content: string;
                     }) => /*html*/ `
             <div class="ml-5 mt-2">
               <a href="#${child.slug}" id="${child.slug + '-link'}" class="link hover:font-bold inline-block w-full">
-                ${child.Title}
+                ${child.title}
               </a>
             </div>
           `
