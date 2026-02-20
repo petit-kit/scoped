@@ -457,7 +457,7 @@ define('c-my-component', {}, ({ $, host }) => {
 
 Scoped includes a set of optional plugins to extend or enhance component behavior. You can import any of these plugins and register them via the \`plugins\` option.
 
-⏲ Document is working in progress
+⏲ Plugins documentation is working in progress
 
 **Available Plugins:**
 
