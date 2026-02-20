@@ -6,32 +6,35 @@ Scoped includes a set of optional plugins to extend or enhance component behavio
 
 **Available Plugins:**
 
-- **[lerpPlugin](src/plugins/lerp/README.md) & [springPlugin](src/plugins/spring/README.md)**  
-  Adds a reactive spring physics engine for animating values with natural, spring-like motion. Powered by [@petit-kit/animate](https://github.com/petit-kit/animate). Integrates seamlessly with the timer plugin for requestAnimationFrame-based updates.
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/lerp/README.md" target="_blank">lerpPlugin</a> & <a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/spring/README.md" target="_blank">springPlugin</a>**  
+  Adds a reactive spring physics engine for animating values with natural, spring-like motion. Powered by <a href="https://github.com/petit-kit/animate" target="_blank">@petit-kit/animate</a>. Integrates seamlessly with the timer plugin for requestAnimationFrame-based updates.
 
-- **[morphPlugin](src/plugins/morph/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/morph/README.md" target="_blank">morphPlugin</a>**  
   Provides idiomorph-based DOM morphing for efficient, non-destructive updates.
 
-- **[devicePlugin](src/plugins/device/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/device/README.md" target="_blank">devicePlugin</a>**  
   Detects and reacts to device and input type changes (e.g., pointer type, hover support).
 
-- **[lenisPlugin](src/plugins/lenis/README.md)**  
-  Integrates the [Lenis](https://github.com/studio-freight/lenis) smooth scrolling library.
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/lenis/README.md" target="_blank">lenisPlugin</a>**  
+  Integrates the <a href="https://github.com/studio-freight/lenis" target="_blank">Lenis</a> smooth scrolling library.
 
-- **[timerPlugin](src/plugins/timer/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/timer/README.md" target="_blank">timerPlugin</a>**  
   Adds easy interval, timeout, and requestAnimationFrame timers to your component logic.
 
-- **[windowPlugin](src/plugins/window/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/window/README.md" target="_blank">windowPlugin</a>**  
   Supplies window-level utilities such as window resize and scroll event listeners.
 
-- **[inViewPlugin](src/plugins/inview/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/inview/README.md" target="_blank">inViewPlugin</a>**  
   Detects when an element is within the viewport and triggers handlers (uses IntersectionObserver).
 
-- **[mousePlugin](src/plugins/mouse/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/mouse/README.md" target="_blank">mousePlugin</a>**  
   Tracks mouse position, mouse events, and allows you to listen to wheel/pointer activity.
 
-- **[pointerPlugin](src/plugins/pointer/README.md)**  
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/pointer/README.md" target="_blank">pointerPlugin</a>**  
   Lerp mouse position
+
+- **<a href="https://github.com/petit-kit/scoped/tree/main/src/plugins/localstorage/README.md" target="_blank">localStoragePlugin</a>**  
+  Scoped localStorage API with optional key prefix and JSON serialization.
 
 **Usage Example:**
 

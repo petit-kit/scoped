@@ -34,6 +34,18 @@ Interpolation with `${...}` gives you access to state, props, or anything in clo
 };
 ```
 
+### XSS
+
+When interpolating **user-provided** or untrusted content, use `escapeHtml` to prevent XSS. It escapes `&`, `<`, `>`, `"`, and `'` so the content is safe in HTML context.
+
+```typescript
+({ escapeHtml }) => {
+  return () => `<span>${escapeHtml(userInput)}</span>`;
+};
+```
+
+`escapeHtml` accepts any value (falsy values return empty string) and returns a string safe for HTML. Do **not** use it with content you control and intend as markup — for that, use `bind:html` instead.
+
 ### Event Handlers
 
 Use `on:eventName="handler"` to bind events, where **handler** is a function from your **actions** object or setup context:

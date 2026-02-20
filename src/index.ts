@@ -35,6 +35,7 @@ import { version } from '../version';
  *     </div>
  *   `
  * })
+ * 
 
  * ```
  *
@@ -68,6 +69,17 @@ export const happy = () => {
     'The website is using @petit-kit/scoped v' + SCOPE_VERSION,
     '\nhttps://github.com/petit-kit/scoped'
   );
+};
+
+const escapeHtmlImpl = (str: unknown): string => {
+  if (str == null || str === '') return '';
+  const s = String(str);
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 };
 
 /**
@@ -600,6 +612,19 @@ export interface ComponentContextBase<
     selector: string,
     handler: (event: Event, target: Element) => void
   ) => () => void;
+  /**
+   * Escapes HTML special characters to prevent XSS when rendering user content.
+   * Use with `bind:text` or when building safe HTML strings.
+   *
+   * @param str - String to escape (falsy values return empty string)
+   * @returns Escaped string safe for HTML context
+   *
+   * @example
+   * ```typescript
+   * return () => `<span>${escapeHtml(userInput)}</span>`;
+   * ```
+   */
+  escapeHtml: (str: unknown) => string;
 }
 
 /**
@@ -1366,6 +1391,7 @@ function define<
               this._delegate(eventType, selector, handler);
               return () => this._undelegate(eventType, selector, handler);
             },
+            escapeHtml: escapeHtmlImpl,
           };
 
           for (const plugin of resolvedPlugins) {

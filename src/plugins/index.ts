@@ -39,3 +39,8 @@ export {
 export { pointerPlugin, type PointerControls } from './pointer';
 export { lerpPlugin, type LerpControls } from './lerp';
 export { springPlugin, type SpringControls } from './spring';
+export {
+  localStoragePlugin,
+  type LocalStorageControls,
+  type LocalStoragePluginOptions,
+} from './localstorage';
