@@ -1,7 +1,7 @@
 <br />
 
 <p align="center">
-  <img src='https://github.com/petit-kit/scoped/blob/main/assets/logo.png?raw=true' width="400px" />
+  <img src='https://github.com/petit-kit/scoped/blob/main/assets/logo.svg?raw=true' width="400px" />
 </p>
 <br />
 <br />
@@ -74,15 +74,15 @@ define(
     };
 
     return () => `
-    <div>
-      <input
-        type="range" min="0" max="100" step="1"
-        bind:value="value"
-        on:input="handleChange"
-      />
-      <c-number ref="number" bind:value="value"></c-number>
-    </div>
-  `;
+      <div>
+        <input
+          type="range" min="0" max="100" step="1"
+          bind:value="value"
+          on:input="handleChange"
+        />
+        <c-number ref="number" bind:value="value"></c-number>
+      </div>
+    `;
   }
 );
 ```
