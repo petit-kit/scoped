@@ -15,7 +15,7 @@ https://github.com/petit-kit/scoped`)},C0={"&":"&amp;","<":"&lt;",">":"&gt;",'"'
       </div>
     `));Oe("c-rolling-number",{props:{value:{type:Number,default:0},min:{type:Number,default:0},max:{type:Number,default:360},step:{type:Number,default:5}},plugins:[Ht()]},({computed:e,props:u,onPropsChanged:t,refs:n,createSpring:r,runSpring:i,host:c})=>{const s=r({from:0,to:0,stiffness:300,damping:30,mass:1});t(()=>s.setTarget(u.max-u.value));const o=e(()=>Array.from({length:u.max-u.min+1},(f,p)=>u.min+p));return i(s,f=>{const p=f,a=n.container;a&&(a.style.transform=`translate3d(0, ${-p*36}px, 0)`);const h=c.$('[ref="number"]');if(h){h.forEach(d=>d.style.opacity="0.5");let l=Pu(0,Math.round(p),1/0);h[l]&&(h[l].style.opacity="1")}}),()=>`
       <div
-        class="overflow-hidden h-[80px] pt-[12px] roll-mask"
+        class="overflow-hidden h-[80px] pt-[20px] roll-mask"
       >
         <div ref="container">
           ${o().reverse().map(f=>`
