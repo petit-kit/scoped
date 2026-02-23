@@ -631,6 +631,7 @@ ${v0}`},{title:"Installation",slug:"installation",content:w0},{title:"Getting st
           md:scale-30 md:-translate-y-[32%]
           lg:scale-40 lg:-translate-y-[30%]
           2xl:scale-55 2xl:-translate-y-[23%]
+          3xl:scale-65 3xl:-translate-y-[18%]
         "
       >
         <defs>
