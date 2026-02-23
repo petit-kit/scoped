@@ -22,7 +22,7 @@ https://github.com/petit-kit/scoped`)},C0={"&":"&amp;","<":"&lt;",">":"&gt;",'"'
                 <div
                   ref="number"
                   data-index="${f}"
-                  class="sub-title font-bold! w-[4ch] text-center h-[36px] leading-[36px] roll-mask-item transition-opacity duration-50"
+                  class="text-[min(5vi,2.5rem)] font-bold! w-[4ch] text-center h-[36px] leading-[36px] roll-mask-item transition-opacity duration-50"
                 >
                   ${f}
                 </div>
