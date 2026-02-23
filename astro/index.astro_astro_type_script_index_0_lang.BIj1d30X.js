@@ -512,7 +512,8 @@ define('c-lazy-list', {}, ({ shouldRender, state, props }) => {
     // Skip specific state keys
     if (ctx.reason === 'state' && ctx.changedKeys?.includes('scrollY'))
       return false;
-    return true;
+
+    return state.paused;
   });
 
   return () => \`<ul>\${props.items.map((i) => \`<li>\${i}</li>\`).join('')}</ul>\`;
