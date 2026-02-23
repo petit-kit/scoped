@@ -130,9 +130,14 @@ define(
       }
     });
 
+    let isMobile = false;
+
     onMount(() => {
-      window.addEventListener('pointerup', actions.open);
       window.addEventListener('pointerdown', actions.close);
+      window.addEventListener('pointerup', () => {
+        if (isMobile) return;
+        actions.open();
+      });
 
       timer.setTimeout(() => {
         actions.close();
@@ -155,6 +160,8 @@ define(
     };
 
     onWindowResize(() => {
+      isMobile = window.innerWidth < 768;
+
       if (refs['left-path']) {
         refs['left-path'].setAttribute(
           'd',
@@ -183,6 +190,11 @@ define(
 
     actions.close = (e) => {
       eyelipLerp.setTarget(1);
+      if (isMobile) {
+        timer.setTimeout(() => {
+          actions.open();
+        }, 250);
+      }
     };
 
     actions.open = (e) => {

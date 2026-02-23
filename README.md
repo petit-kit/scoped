@@ -8,11 +8,11 @@
 <br />
 <br />
 
-# Scoped - 0.0.7
+# Scoped - 0.0.8-beta.1
 
 ### A lightweight, framework-agnostic library for building web components with reactive state, bindings, lifecycle hooks, template-based rendering and plugins.
 
-**4.2 Kb** Gzipped - **12.7kb** Minified
+**4.3 Kb** Gzipped - **12.7kb** Minified
 
 <br />
 
@@ -498,14 +498,51 @@ define('my-card', {}, () => {
 
 Lifecycle hooks let you run code at specific moments in the component's life, such as mount, update, or destruction.
 
-| Method                   | Description              |
-| ------------------------ | ------------------------ |
-| **`onMount(cb)`**        | After mount              |
-| **`onDestroy(cb)`**      | On destroy               |
-| **`onUpdate(cb)`**       | After each update        |
-| **`onBeforeUpdate(cb)`** | Before each update       |
-| **`onFirstUpdate(cb)`**  | Once, after first render |
-| **`onPropsChanged(cb)`** | When props change        |
+| Method                   | Description               |
+| ------------------------ | ------------------------- |
+| **`onMount(cb)`**        | After mount               |
+| **`onDestroy(cb)`**      | On destroy                |
+| **`onUpdate(cb)`**       | After each update         |
+| **`onBeforeUpdate(cb)`** | Before each update        |
+| **`onFirstUpdate(cb)`**  | Once, after first render  |
+| **`onPropsChanged(cb)`** | When props change         |
+| **`shouldRender(cb)`**   | Conditionally skip render |
+
+<br/>
+
+### shouldRender
+
+Register a predicate to conditionally skip full renders. When the callback returns `false`, the template is not executed and the DOM is not updated. Effects and `onUpdate` hooks still run.
+
+The callback receives a context object:
+
+| Property          | Type        | Description                                      |
+| ----------------- | ----------- | ------------------------------------------------ |
+| **`reason`**      | `string`    | `'mount'` \| `'props'` \| `'state'` \| `'force'` |
+| **`changedKeys`** | `string[]?` | For props/state: which keys changed              |
+
+<br />
+
+```typescript
+define('c-lazy-list', {}, ({ shouldRender, state, props }) => {
+  state.paused = false;
+
+  shouldRender((ctx) => {
+    // Always render on props change
+    if (ctx.reason === 'props') return true;
+    // Skip state updates when tab is hidden (e.g. scroll position)
+    if (ctx.reason === 'state' && document.visibilityState === 'hidden')
+      return false;
+    // Skip specific state keys
+    if (ctx.reason === 'state' && ctx.changedKeys?.includes('scrollY'))
+      return false;
+
+    return state.paused;
+  });
+
+  return () => `<ul>${props.items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
+});
+```
 
 ## Select
 
@@ -522,15 +559,17 @@ define('c-my-component', {}, ({ $, host }) => {
     const inner = el.$('.list-item'); // same API on host
   });
 
-  return () => `<div>
-    <button class="primary">OK</button>
-    <span class="list-item">
-      A
-    </span>
-    <span class="list-item">
-      B
-    </span>
-  </div>`;
+  return () => `
+    <div>
+      <button class="primary">OK</button>
+      <span class="list-item">
+        A
+      </span>
+      <span class="list-item">
+        B
+      </span>
+    </div>
+  `;
 });
 ```
 

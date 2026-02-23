@@ -71,15 +71,16 @@ export const happy = () => {
   );
 };
 
+const escapeMap: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
 const escapeHtmlImpl = (str: unknown): string => {
   if (str == null || str === '') return '';
-  const s = String(str);
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(str).replace(/[&<>"']/g, (c) => escapeMap[c]);
 };
 
 /**
@@ -544,6 +545,25 @@ export interface ComponentContextBase<
     callback: (propName: string, oldValue: any, newValue: any) => void
   ) => void;
   /**
+   * Register a predicate to conditionally skip full renders.
+   *
+   * When the callback returns false, the template is not executed and the DOM
+   * is not updated. Effects and onUpdate hooks still run.
+   *
+   * @method shouldRender
+   * @param {function(ShouldRenderContext): boolean} callback - Predicate returning false to skip render
+   *
+   * @example
+   * ```typescript
+   * shouldRender((ctx) => {
+   *   if (ctx.reason === 'props') return true;
+   *   if (ctx.reason === 'state' && ctx.changedKeys?.includes('scrollY')) return false;
+   *   return true;
+   * });
+   * ```
+   */
+  shouldRender: (callback: (ctx: ShouldRenderContext) => boolean) => void;
+  /**
    * Link a prop and a state key (two-way, no extra render)
    *
    * Updates state when the prop changes, and updates the prop/attribute
@@ -695,6 +715,25 @@ export type DelegatedEventInfo = {
   handlers: Set<(e: Event, target: Element) => void>;
 };
 
+/**
+ * Context passed to shouldRender callback.
+ *
+ * @example
+ * ```typescript
+ * shouldRender((ctx) => {
+ *   if (ctx.reason === 'props') return true;
+ *   if (ctx.reason === 'state' && ctx.changedKeys?.includes('scrollY')) return false;
+ *   return true;
+ * });
+ * ```
+ */
+export type ShouldRenderContext = {
+  /** The event that triggered the render */
+  reason: 'mount' | 'props' | 'state' | 'force';
+  /** For props/state: which keys changed (if known) */
+  changedKeys?: string[];
+};
+
 export type EffectDeps = any[] | (() => any[]);
 
 export type ComputedDeps = any[] | (() => any[]);
@@ -749,7 +788,6 @@ function parsePropValue(raw: string | null, def?: PropDefinition): any {
 
       case Number: {
         const n = Number(raw);
-        // Return default if parsing results in NaN
         return Number.isNaN(n) ? d : n;
       }
 
@@ -762,23 +800,12 @@ function parsePropValue(raw: string | null, def?: PropDefinition): any {
         return raw != null;
       }
 
-      case Object: {
-        try {
-          // Parse JSON string, or return raw if already an object
-          return typeof raw === 'string' ? JSON.parse(raw) : raw;
-        } catch {
-          // Return default if JSON parsing fails
-          return d;
-        }
-      }
-
+      case Object:
       case Array: {
         try {
-          // Parse JSON string, or return raw if already an array
           return typeof raw === 'string' ? JSON.parse(raw) : raw;
         } catch {
-          // Return default array or empty array if default is not an array
-          return Array.isArray(d) ? d : [];
+          return type === Array ? (Array.isArray(d) ? d : []) : d;
         }
       }
 
@@ -819,13 +846,8 @@ function reflectAttribute(
 
   // Boolean attributes: set empty string for true, remove for false
   if (type === Boolean) {
-    if (value) {
-      el.setAttribute(key, '');
-      return;
-    } else {
-      el.removeAttribute(key);
-      return;
-    }
+    value ? el.setAttribute(key, '') : el.removeAttribute(key);
+    return;
   }
 
   // Object and Array: JSON stringify
@@ -835,17 +857,11 @@ function reflectAttribute(
     } catch {
       attrValue = null;
     }
-  } else if (type === Number) {
-    // Number: convert to string
-    attrValue = value == null ? null : String(value);
   } else {
-    // String or other: convert to string
     attrValue = value == null ? null : String(value);
   }
 
-  // Remove attribute if null, otherwise set it
-  if (attrValue == null) el.removeAttribute(key);
-  else el.setAttribute(key, attrValue);
+  attrValue == null ? el.removeAttribute(key) : el.setAttribute(key, attrValue);
 }
 
 /**
@@ -864,9 +880,9 @@ const interpolateTemplate = (
   props: Record<string, any>
 ): string => {
   const scope = { ...props, ...state };
-  return template.replace(interpolationPattern, (_match, key) => {
-    const value = (scope as any)[key];
-    return value == null ? '' : String(value);
+  return template.replace(interpolationPattern, (_, k) => {
+    const v = (scope as any)[k];
+    return v == null ? '' : String(v);
   });
 };
 
@@ -1024,6 +1040,15 @@ function define<
       (propName: string, oldValue: any, newValue: any) => void
     >;
 
+    /** shouldRender predicate (null = always render) */
+    _shouldRender: ((ctx: ShouldRenderContext) => boolean) | null;
+
+    /** Reason for current update (set before update, read by shouldRender) */
+    _updateReason: ShouldRenderContext['reason'];
+
+    /** Changed prop keys for props updates */
+    _changedKeys: string[] | undefined;
+
     /** Map of delegated event handlers */
     _delegated: Map<string, DelegatedEventInfo>;
 
@@ -1044,9 +1069,6 @@ function define<
       missingActions: Set<string>;
       warned: Set<string>;
     };
-
-    /** Whether dev mode is enabled (always false in production build) */
-    _devMode: boolean;
 
     /** Component tag name (for error messages) */
     _tagName: string;
@@ -1138,6 +1160,9 @@ function define<
       this._onBeforeUpdate = [];
       this._onFirstUpdate = [];
       this._onPropsChanged = [];
+      this._shouldRender = null;
+      this._updateReason = 'mount';
+      this._changedKeys = undefined;
       this._delegated = new Map();
 
       // Initialize lifecycle flags
@@ -1155,7 +1180,6 @@ function define<
           warned: new Set(),
         };
       }
-      this._devMode = dev;
       this._tagName = tagName;
       this._needsRender = false;
       this._suppressPropRender = new Set();
@@ -1265,6 +1289,8 @@ function define<
       }
 
       // Trigger update
+      this._updateReason = 'props';
+      this._changedKeys = [name];
       this.update(true);
     }
 
@@ -1328,6 +1354,9 @@ function define<
             onBeforeUpdate: (cb) => this._onBeforeUpdate.push(cb),
             onFirstUpdate: (cb) => this._onFirstUpdate.push(cb),
             onPropsChanged: (cb) => this._onPropsChanged.push(cb),
+            shouldRender: (cb) => {
+              this._shouldRender = cb;
+            },
             link: (propName, stateKey) => {
               const key = stateKey || propName;
               (this.state as any)[key] = (this.props as any)[propName];
@@ -1435,6 +1464,8 @@ function define<
       // PRIORITY 4: INITIAL RENDER (TOP PRIORITY - happens immediately)
       // Set flag to indicate we're in mount render phase
       this._inMountRender = true;
+      this._updateReason = 'mount';
+      this._changedKeys = undefined;
       this.update(true);
       this._inMountRender = false;
 
@@ -1442,6 +1473,8 @@ function define<
       // If attributes changed during mount, render again
       if (this._needsRender) {
         this._needsRender = false;
+        this._updateReason = 'props';
+        this._changedKeys = undefined;
         this.update(true);
       }
 
@@ -1653,7 +1686,7 @@ function define<
      */
     setState(partial: Partial<State>): void {
       // Merge new state into existing state (skip if nothing actually changed)
-      let didChange = false;
+      const changedKeys: string[] = [];
       const next = partial as any;
       const current = this.state as any;
       for (const key in next) {
@@ -1661,14 +1694,16 @@ function define<
         const value = next[key];
         if (!Object.is(current[key], value)) {
           current[key] = value;
-          didChange = true;
+          changedKeys.push(key);
         }
       }
-      if (!didChange) return;
+      if (changedKeys.length === 0) return;
 
       // Always rerender when setState is called
       if (this._inMountRender || !this._mounted) {
         // During mount or before mount, render immediately
+        this._updateReason = 'state';
+        this._changedKeys = changedKeys;
         this.update(true);
       } else {
         // After mount, schedule render via requestAnimationFrame
@@ -1676,9 +1711,12 @@ function define<
         if (this._scheduled) return; // Prevent duplicate scheduling
 
         this._scheduled = true;
+        const keys = [...changedKeys];
         requestAnimationFrame(() => {
           this._scheduled = false;
           if (!this._render || !this.isConnected) return;
+          this._updateReason = 'state';
+          this._changedKeys = keys;
           this.update(true); // Full render, not just effects
         });
       }
@@ -1798,6 +1836,8 @@ function define<
         this._needsRender = true;
         return;
       }
+      this._updateReason = 'props';
+      this._changedKeys = changedKeys;
       this.update(true);
     }
 
@@ -1902,77 +1942,82 @@ function define<
       }
 
       if (fullRender) {
-        this._runComputed();
-        // CRITICAL PATH: Render template immediately
-        let template = '';
-        try {
-          template = this._render();
-        } catch (e: any) {
-          warn('RENDER_ERROR', String(e?.message || e));
-          // On render error, use empty template
-          template = '';
-        }
+        // Check shouldRender - skip template/DOM when false
+        const ctx: ShouldRenderContext = {
+          reason: this._updateReason,
+          changedKeys: this._changedKeys,
+        };
+        const skipRender =
+          this._shouldRender !== null && !this._shouldRender(ctx);
 
-        // Ensure template is a string
-        if (typeof template !== 'string')
-          template = template == null ? '' : String(template);
-
-        template = interpolateTemplate(
-          template,
-          this.state as any,
-          this.props as any
-        );
-        if (!this._isShadowRoot) {
-          const slotOwnerAttr = `data-scope-owner="${this._tagName}"`;
-          template = template.replace(
-            /<slot(?![^>]*data-scope-owner)(\s|>)/g,
-            `<slot ${slotOwnerAttr}$1`
-          );
-        }
-        this._hasBoundComputed = false;
-
-        const templateUnchanged =
-          this._lastTemplate !== null &&
-          Object.is(this._lastTemplate, template);
-        let didUpdateDom = false;
-
-        if (!templateUnchanged || !this._mounted) {
-          // IMMEDIATE: Set innerHTML first (component becomes visible instantly)
-          // Use cached flag instead of instanceof check
-          if (this._isShadowRoot) {
-            (this._root as ShadowRoot).innerHTML = template;
-          } else {
-            (this._root as HTMLElement).innerHTML = template;
+        if (!skipRender) {
+          this._runComputed();
+          // CRITICAL PATH: Render template immediately
+          let template = '';
+          try {
+            template = this._render();
+          } catch (e: any) {
+            warn('RENDER_ERROR', String(e?.message || e));
+            // On render error, use empty template
+            template = '';
           }
-          this._lastTemplate = template;
-          didUpdateDom = true;
-        }
 
-        // OPTIMIZED: Split critical vs non-critical post-render work
-        if (this._inMountRender) {
-          // During mount: defer non-critical work for fastest first paint
-          // Sync refs immediately (needed for effects that might run)
-          this._syncRefs();
+          // Ensure template is a string
+          if (typeof template !== 'string')
+            template = template == null ? '' : String(template);
 
-          // Defer slots, events, and effects to the next frame
-          // This allows the browser to paint before processing interactivity
-          const schedulePostRender =
-            typeof requestAnimationFrame === 'function'
-              ? requestAnimationFrame
-              : (cb: () => void) => setTimeout(cb, 0);
-          schedulePostRender(() => {
-            if (!this._render || !this.isConnected) return;
+          template = interpolateTemplate(
+            template,
+            this.state as any,
+            this.props as any
+          );
+          if (!this._isShadowRoot) {
+            const slotOwnerAttr = `data-scope-owner="${this._tagName}"`;
+            template = template.replace(
+              /<slot(?![^>]*data-scope-owner)(\s|>)/g,
+              `<slot ${slotOwnerAttr}$1`
+            );
+          }
+          this._hasBoundComputed = false;
+
+          const templateUnchanged =
+            this._lastTemplate !== null &&
+            Object.is(this._lastTemplate, template);
+          let didUpdateDom = false;
+
+          if (!templateUnchanged || !this._mounted) {
+            (this._root as HTMLElement).innerHTML = template;
+            this._lastTemplate = template;
+            didUpdateDom = true;
+          }
+
+          // OPTIMIZED: Split critical vs non-critical post-render work
+          if (this._inMountRender) {
+            // During mount: defer slots, refs, events, and effects to next frame
+            const schedulePostRender =
+              typeof requestAnimationFrame === 'function'
+                ? requestAnimationFrame
+                : (cb: () => void) => setTimeout(cb, 0);
+            schedulePostRender(() => {
+              if (!this._render || !this.isConnected) return;
+              if (didUpdateDom && !shadow) this.projectSlots();
+              if (didUpdateDom) this._syncRefsAndBindEvents();
+              this._runEffects();
+              this._callUpdateHooks();
+            });
+          } else {
+            // Subsequent renders: process immediately (already visible)
             if (didUpdateDom && !shadow) this.projectSlots();
-            if (didUpdateDom) this._bindEventHandlers();
+            if (didUpdateDom) this._syncRefsAndBindEvents();
             this._runEffects();
             this._callUpdateHooks();
-          });
+          }
         } else {
-          // Subsequent renders: process immediately (already visible)
-          if (didUpdateDom && !shadow) this.projectSlots();
-          if (didUpdateDom) this._syncRefsAndBindEvents();
+          // shouldRender returned false: skip template/DOM, run effects only
           this._runEffects();
-          this._callUpdateHooks();
+          if (this._mounted) {
+            this._callUpdateHooks();
+          }
         }
       } else {
         // Partial update: run effects only (no template re-execution)
@@ -2005,6 +2050,8 @@ function define<
         this._needsRender = true;
         return;
       }
+      this._updateReason = 'force';
+      this._changedKeys = undefined;
       this.update(true);
     }
 
@@ -2121,8 +2168,9 @@ function define<
             }
             if (propName === 'value') {
               try {
-                if (currentValue == null) el.removeAttribute('value');
-                else el.setAttribute('value', String(currentValue));
+                currentValue == null
+                  ? el.removeAttribute('value')
+                  : el.setAttribute('value', String(currentValue));
               } catch {}
             }
           } else if (currentValue != null) {
@@ -2140,6 +2188,15 @@ function define<
           }
         }
       }
+    }
+
+    /** Returns true if prev/next deps differ (should run) */
+    _depsChanged(prev: any[] | undefined, next: any[] | undefined): boolean {
+      if (!prev || !next || prev.length !== next.length) return true;
+      for (let i = 0; i < next.length; i++) {
+        if (!Object.is(prev[i], next[i])) return true;
+      }
+      return false;
     }
 
     /**
@@ -2161,21 +2218,9 @@ function define<
           try {
             const depsValue =
               typeof record.deps === 'function' ? record.deps() : record.deps;
-
             if (Array.isArray(depsValue)) {
               nextDeps = depsValue;
-              if (
-                record.prevDeps &&
-                record.prevDeps.length === nextDeps.length
-              ) {
-                shouldRun = false;
-                for (let i = 0; i < nextDeps.length; i++) {
-                  if (!Object.is(record.prevDeps[i], nextDeps[i])) {
-                    shouldRun = true;
-                    break;
-                  }
-                }
-              }
+              shouldRun = this._depsChanged(record.prevDeps, nextDeps);
             }
           } catch (e: any) {
             warn('COMPUTED_DEPS_ERROR', String(e?.message || e));
@@ -2220,21 +2265,9 @@ function define<
           try {
             const depsValue =
               typeof effect.deps === 'function' ? effect.deps() : effect.deps;
-
             if (Array.isArray(depsValue)) {
               nextDeps = depsValue;
-              if (
-                effect.prevDeps &&
-                effect.prevDeps.length === nextDeps.length
-              ) {
-                shouldRun = false;
-                for (let i = 0; i < nextDeps.length; i++) {
-                  if (!Object.is(effect.prevDeps[i], nextDeps[i])) {
-                    shouldRun = true;
-                    break;
-                  }
-                }
-              }
+              shouldRun = this._depsChanged(effect.prevDeps, nextDeps);
             }
           } catch (e: any) {
             warn('EFFECT_DEPS_ERROR', String(e?.message || e));
@@ -2313,136 +2346,12 @@ function define<
     }
 
     /**
-     * Syncs DOM refs by finding all elements with [ref] attributes
-     *
-     * Populates this.refs with references to DOM elements. If multiple
-     * elements have the same ref name, they become an array.
-     *
-     * @method _syncRefs
-     * @returns {void}
-     *
-     * @example Template usage
-     * ```typescript
-     * return () => '<div ref="myDiv">Content</div>';
-     * // Access via: refs.myDiv
-     * ```
-     *
-     * @internal This method is called automatically during render
-     */
-    _syncRefs(): void {
-      const root = this._isShadowRoot ? (this._root as ShadowRoot) : this;
-      const refs = root.querySelectorAll('[ref]');
-
-      // Clear existing refs (mutate in place to preserve reference)
-      const currentRefs = this.refs as any;
-      for (const k in currentRefs) {
-        if (currentRefs.hasOwnProperty(k)) {
-          delete currentRefs[k];
-        }
-      }
-
-      // Early exit if no refs
-      if (refs.length === 0) {
-        return;
-      }
-
-      // Find all elements with ref attributes and add to existing refs object
-      // (mutate in place to preserve reference passed to setup function)
-      for (let i = 0; i < refs.length; i++) {
-        const el = refs[i] as HTMLElement;
-        if (this._isWithinNestedComponent(el)) continue;
-        const name = el.getAttribute('ref');
-        if (name) {
-          // Optimize array operations: use push instead of spread
-          if (!currentRefs[name]) {
-            currentRefs[name] = el;
-          } else if (Array.isArray(currentRefs[name])) {
-            (currentRefs[name] as HTMLElement[]).push(el);
-          } else {
-            currentRefs[name] = [currentRefs[name] as HTMLElement, el];
-          }
-        }
-      }
-    }
-
-    /**
-     * Binds event handlers from on:* attributes
-     *
-     * Finds all elements with on:* attributes (e.g., on:click="handleClick"),
-     * removes the attribute, and binds the corresponding action method as
-     * an event listener.
-     *
-     * @method _bindEventHandlers
-     * @returns {void}
-     *
-     * @example Template usage
-     * ```typescript
-     * actions.handleClick = () => { /* ... *\/ };
-     * return () => '<button on:click="handleClick">Click</button>';
-     * ```
-     *
-     * @internal This method is called automatically during render
-     */
-    _bindEventHandlers(): void {
-      // Bind event handlers from on:* attributes
-      const root = this._isShadowRoot ? (this._root as ShadowRoot) : this;
-      const allElements = root.querySelectorAll('*');
-
-      for (let i = 0; i < allElements.length; i++) {
-        const el = allElements[i] as HTMLElement;
-        if (this._isWithinNestedComponent(el)) continue;
-        // Optimize: attributes is always truthy, just check length
-        if (el.attributes.length === 0) continue;
-
-        // Iterate backwards to safely remove attributes while iterating
-        const attrs = el.attributes;
-        for (let j = attrs.length - 1; j >= 0; j--) {
-          const attr = attrs[j];
-          if (!attr.name.startsWith('on:')) continue;
-
-          const eventType = attr.name.slice(3); // Use slice instead of substring
-          const actionName = attr.value;
-
-          // Remove old listener if exists (prevent memory leak)
-          const handlerKey = `__tinyHandler_${eventType}`;
-          const oldHandler = (el as any)[handlerKey];
-          if (oldHandler) {
-            el.removeEventListener(eventType, oldHandler);
-          }
-
-          // Remove attribute (no longer needed after binding)
-          el.removeAttribute(attr.name);
-
-          // Bind event handler if action exists
-          const action = (this.actions as any)[actionName];
-          if (action && typeof action === 'function') {
-            // Create handler once and store reference
-            const handler = (e: Event) => {
-              action.call(this.actions, e);
-            };
-            (el as any)[handlerKey] = handler;
-            el.addEventListener(eventType, handler);
-          } else {
-            if (process.env.NODE_ENV !== 'production' && this._devMode) {
-              console.warn(
-                `[${this._tagName}] MISSING_ACTION: Action "${actionName}" not found for on:${eventType}`
-              );
-            }
-          }
-        }
-      }
-    }
-
-    /**
-     * Optimized: Single DOM traversal to sync refs and bind event handlers
-     *
-     * Combines _syncRefs() and _bindEventHandlers() into one DOM traversal
-     * for better performance on subsequent renders.
+     * Syncs DOM refs and binds event handlers in a single DOM traversal
      *
      * @method _syncRefsAndBindEvents
      * @returns {void}
      *
-     * @internal This method is called automatically during subsequent renders for performance
+     * @internal This method is called automatically during render
      */
     _syncRefsAndBindEvents(): void {
       // Single DOM traversal to sync refs and bind event handlers
@@ -2507,7 +2416,7 @@ function define<
               (el as any)[handlerKey] = handler;
               el.addEventListener(eventType, handler);
             } else {
-              if (process.env.NODE_ENV !== 'production' && this._devMode) {
+              if (process.env.NODE_ENV !== 'production') {
                 console.warn(
                   `[${this._tagName}] MISSING_ACTION: Action "${actionName}" not found for on:${eventType}`
                 );
@@ -2778,7 +2687,7 @@ function define<
       warn('DEFINE_ERROR', String(e?.message || e));
     }
   } else if (process.env.NODE_ENV !== 'production') {
-    console.warn(`[${tagName}] ALREADY_DEFINED: on saute la redéfinition.`);
+    console.warn(`[${tagName}] ALREADY_DEFINED`);
   }
   return TinyComponent;
 }

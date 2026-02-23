@@ -13,14 +13,16 @@ define('c-my-component', {}, ({ $, host }) => {
     const inner = el.$('.list-item'); // same API on host
   });
 
-  return () => `<div>
-    <button class="primary">OK</button>
-    <span class="list-item">
-      A
-    </span>
-    <span class="list-item">
-      B
-    </span>
-  </div>`;
+  return () => `
+    <div>
+      <button class="primary">OK</button>
+      <span class="list-item">
+        A
+      </span>
+      <span class="list-item">
+        B
+      </span>
+    </div>
+  `;
 });
 ```

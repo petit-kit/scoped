@@ -99,6 +99,13 @@ pre code.hljs {
   }
 }
 
+.examples {
+  @apply ml-[-10px] md:ml-[-20px];
+  @apply border border-black/10;
+  z-index: 1000;
+  position: relative;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

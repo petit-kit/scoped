@@ -25,7 +25,6 @@ export const createVelocity = (value: number) => {
   };
 };
 
-// Utility function to compute velocity of spring value changes
 export function computeSpringVelocity(
   prevValue: number,
   currValue: number,
