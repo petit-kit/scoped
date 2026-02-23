@@ -1418,6 +1418,7 @@ function define<
         }
       } catch (e: any) {
         warn('SETUP_ERROR', String(e?.message || e));
+        throw e;
       }
 
       // Validate setup result

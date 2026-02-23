@@ -1,5 +1,7 @@
 import { SCOPE_VERSION } from '@petit-kit/scoped';
 
+import '../components/examples/part-1.ts';
+
 import text1 from '../../../doc/1_intro.md?raw';
 import text2 from '../../../doc/2_installation.md?raw';
 import text3 from '../../../doc/3_getting_started.md?raw';
@@ -32,6 +34,7 @@ export const parts = [
     title: 'Getting started',
     slug: 'getting-started',
     content: text3,
+    examples: `<c-example-1></c-example-1>`,
     children: [
       {
         title: 'Component options',

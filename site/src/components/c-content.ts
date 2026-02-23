@@ -22,18 +22,24 @@ define('c-content', {}, () => {
       }
       return acc;
     },
-    [] as { title: string; content: string; slug: string }[]
+    [] as { title: string; content: string; slug: string; examples?: string }[]
   );
 
   return () => /*html*/ `
     <div class="max-w-[calc(100vw-20px)]">
       ${parts
         .map(
-          (item: { title: string; content: string; slug: string }) => /*html*/ `
-        <div class="content" id="${item.slug}">
-          ${md.render(item.content.trim())}
-        </div>
-      `
+          (item: {
+            title: string;
+            content: string;
+            slug: string;
+            examples?: string;
+          }) => /*html*/ `
+            <div class="content" id="${item.slug}">
+              ${md.render(item.content.trim())}
+            </div>
+            ${item.examples ? `<div class="examples">${item.examples}</div>` : ''}
+          `
         )
         .join('<br />')}
     </div>

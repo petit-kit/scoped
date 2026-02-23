@@ -21,7 +21,7 @@ define(
     return () => `
       <div>
         <input
-          type="range" min="0" max="100" step="1"
+          type="range" min="0" max="360" step="1"
           bind:value="value"
           on:input="handleChange"
         />
@@ -30,6 +30,12 @@ define(
     `;
   }
 );
+```
+
+And you just have to call the component in the DOM like so:
+
+```xml
+<c-slider value="5"></c-slider>
 ```
 
 The `define()` function is used to declare a new component.
