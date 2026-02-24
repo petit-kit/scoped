@@ -1478,19 +1478,8 @@ function define<
         this.update(true);
       }
 
-      // PRIORITY 6: Execute lifecycle callbacks (after render is complete)
-      if (!this._mounted) {
-        this._mounted = true;
-        // Call onMount callbacks
-        // Note: onFirstUpdate is called via _callUpdateHooks() after render completes
-        for (const cb of this._onMount) {
-          try {
-            cb();
-          } catch (e: any) {
-            warn('ON_MOUNT_ERROR', String(e?.message || e));
-          }
-        }
-      }
+      // PRIORITY 6: onMount is called from the deferred post-render callback
+      // (after refs are synced) — see update() schedulePostRender
     }
 
     /**
@@ -2002,6 +1991,16 @@ function define<
               if (!this._render || !this.isConnected) return;
               if (didUpdateDom && !shadow) this.projectSlots();
               if (didUpdateDom) this._syncRefsAndBindEvents();
+              if (!this._mounted) {
+                this._mounted = true;
+                for (const cb of this._onMount) {
+                  try {
+                    cb();
+                  } catch (e: any) {
+                    warn('ON_MOUNT_ERROR', String(e?.message || e));
+                  }
+                }
+              }
               this._runEffects();
               this._callUpdateHooks();
             });

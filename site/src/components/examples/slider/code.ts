@@ -1,8 +1,8 @@
 import { define, springPlugin } from '@petit-kit/scoped';
-import { clamp } from '../../lib/utils';
+import { clamp } from '../../../lib/utils';
 
 define(
-  'c-example-slider',
+  'c-slider',
   {
     props: {
       value: { type: Number, default: 0 },
@@ -160,14 +160,4 @@ define(
       </div>
     `;
   }
-);
-
-define(
-  'c-example-1',
-  {},
-  () => () =>
-    `<c-example-slider
-      class="flex flex-col items-center gap-5"
-      value="90"
-    </c-example-slider>`
 );
