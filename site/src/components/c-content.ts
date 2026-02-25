@@ -38,7 +38,7 @@ define('c-content', {}, () => {
             <div class="content" id="${item.slug}">
               ${md.render(item.content.trim())}
             </div>
-            ${item.examples ? `<div class="examples">${item.examples}</div>` : ''}
+            ${item.examples ? `<div class="examples max-w-[880px]">${item.examples}</div>` : ''}
           `
         )
         .join('<br />')}

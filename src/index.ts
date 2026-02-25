@@ -819,6 +819,18 @@ function parsePropValue(raw: string | null, def?: PropDefinition): any {
 }
 
 /**
+ * Returns the default value for a prop definition.
+ * Handles factory defaults (e.g. default: () => []).
+ *
+ * @internal
+ */
+function getPropDefault(def?: PropDefinition): any {
+  if (!def) return undefined;
+  const d = (def as { default?: any }).default;
+  return typeof d === 'function' ? d() : d;
+}
+
+/**
  * Reflects a prop value back to an HTML attribute when reflect: true is set.
  *
  * @param el - The element to set the attribute on
@@ -1998,6 +2010,22 @@ function define<
                     cb();
                   } catch (e: any) {
                     warn('ON_MOUNT_ERROR', String(e?.message || e));
+                  }
+                }
+                // Fire onPropsChanged for props that differ from defaults
+                for (const key in this._typedProps) {
+                  if (!this._typedProps.hasOwnProperty(key)) continue;
+                  const def = this._typedProps[key];
+                  const currentValue = (this.props as any)[key];
+                  const defaultValue = getPropDefault(def);
+                  if (currentValue !== defaultValue) {
+                    for (const cb of this._onPropsChanged) {
+                      try {
+                        cb(key, defaultValue, currentValue);
+                      } catch (e: any) {
+                        warn('ON_PROPS_CHANGED_ERROR', String(e?.message || e));
+                      }
+                    }
                   }
                 }
               }

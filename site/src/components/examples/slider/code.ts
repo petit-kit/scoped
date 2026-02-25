@@ -11,7 +11,9 @@ define(
       step: { type: Number, default: 1 },
     },
   },
-  ({ actions, host, props }) => {
+  ({ actions, host, props, link, state }) => {
+    link('value', 'value');
+
     actions.handleChange = (e: any) =>
       host.updateState({ value: e.target.valueAsNumber });
 
@@ -19,7 +21,7 @@ define(
       host.updateState({ value: clamp(props.min, e.detail.value, props.max) });
 
     return () => `
-      <div class="flex flex-col items-center gap-5 w-[300px]">
+      <div class="flex flex-col items-center gap-10 w-[300px]">
         <div class="flex items-center gap-5">
           <c-knob bind:value="value" on:change="handleKnobChange"></c-knob>
           <c-rolling-number bind:value="value"></c-rolling-number>
@@ -54,13 +56,15 @@ define(
     host,
   }) => {
     const spring: any = createSpring({
-      from: 0,
-      to: 0,
+      from: props.max - props.value,
+      to: props.max - props.value,
       stiffness: 300,
       damping: 30,
-      mass: 1,
+      mass: 0.5,
     });
+
     onPropsChanged(() => spring.setTarget(props.max - props.value));
+
     const numbers = computed(() =>
       Array.from({ length: props.max - props.min + 1 }, (_, i) => props.min + i)
     );
@@ -84,8 +88,17 @@ define(
           ${numbers()
             .reverse()
             .map(
-              (n: number) =>
-                `<div ref="number" data-index="${n}" class="text-[40px] font-bold! w-[4ch] text-center h-[36px] leading-[36px] roll-mask-item transition-opacity duration-50">${n}</div>`
+              (n: number) => `
+                <div
+                  ref="number"
+                  class=" 
+                    text-[40px] font-bold! w-[4ch] text-center h-[36px] leading-[36px]
+                    roll-mask-item transition-opacity duration-50
+                  "
+                >
+                  ${n}
+                </div>
+              `
             )
             .join('')}
         </div>
@@ -111,7 +124,11 @@ define(
     state.active = false;
     state.style = `transform: rotate(${props.value}deg)`;
 
-    const spring = createSpring({ from: 0, to: props.value, stiffness: 200 });
+    const spring = createSpring({
+      from: props.value,
+      to: props.value,
+      stiffness: 200,
+    });
     runSpring(spring, (v: number) =>
       host.updateState({ style: `transform: rotate(${180 + v}deg)` })
     );
@@ -156,7 +173,9 @@ define(
         bind:style="style"
         on:pointerdown="handlePointerDown"
       >
-        <div class="w-[3px] h-[25px] bg-white rounded-full mt-[-40px] shadow-md"></div>
+        <div
+          class="w-[3px] h-[25px] bg-white rounded-full mt-[-40px] shadow-md"
+        ></div>
       </div>
     `;
   }
