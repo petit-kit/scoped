@@ -84,17 +84,6 @@ const escapeHtmlImpl = (str: unknown): string => {
 };
 
 /**
- * Scoped template interpolation pattern.
- *
- * Matches `{key}` in template strings and replaces it with values from
- * `state` and `props` (state wins if both exist).
- *
- * @constant {RegExp}
- * @internal
- */
-const interpolationPattern = /\{([A-Za-z_$][\w$]*)\}/g;
-
-/**
  * Prefix for one-way bindings in templates.
  *
  * Examples:
@@ -876,25 +865,70 @@ function reflectAttribute(
   attrValue == null ? el.removeAttribute(key) : el.setAttribute(key, attrValue);
 }
 
+/** Boolean HTML attributes: present = true, absent = false */
+const BOOLEAN_BIND_ATTRS = new Set([
+  'checked',
+  'disabled',
+  'readonly',
+  'required',
+  'selected',
+  'autofocus',
+  'multiple',
+  'hidden',
+]);
+
 /**
- * Performs `{key}` interpolation against state/props.
+ * Regex for bind:prop="key" in template strings.
+ * Captures prop name and key; skip text/html (content bindings).
+ */
+const bindAttrPattern = /bind:([a-zA-Z_$][\w$]*)="([^"]*)"/g;
+
+/**
+ * Injects resolved values for bind:* attributes into the template string
+ * during render.
  *
- * @param template - Raw template string from render
+ * For attribute-style bindings (value, checked, min, max, etc.), resolves
+ * the key from state/props and writes the attribute value into the HTML
+ * string. Skips bind:text and bind:html (content bindings) and keys that
+ * are not in scope (e.g. computed tokens).
+ *
+ * @param template - Interpolated template string
  * @param state - Component state
  * @param props - Component props
- * @returns Interpolated template string
+ * @returns Template string with bind values expanded
  *
  * @internal
  */
-const interpolateTemplate = (
+const expandBindAttributes = (
   template: string,
   state: Record<string, any>,
   props: Record<string, any>
 ): string => {
   const scope = { ...props, ...state };
-  return template.replace(interpolationPattern, (_, k) => {
-    const v = (scope as any)[k];
-    return v == null ? '' : String(v);
+  const hasOwn = Object.prototype.hasOwnProperty;
+
+  return template.replace(bindAttrPattern, (match, propName, key) => {
+    // Skip content bindings (handled by _applyBindings)
+    if (propName === 'text' || propName === 'html') return match;
+
+    const trimmedKey = key.trim();
+    if (!trimmedKey) return match;
+
+    // Skip computed tokens (not in scope)
+    const inState = hasOwn.call(state, trimmedKey);
+    const inProps = hasOwn.call(props, trimmedKey);
+    if (!inState && !inProps) return match;
+
+    const value = inState ? state[trimmedKey] : props[trimmedKey];
+
+    if (BOOLEAN_BIND_ATTRS.has(propName)) {
+      if (!value) return match;
+      return `${propName}="" ${match}`;
+    }
+
+    if (value == null) return match;
+    const escaped = escapeHtmlImpl(String(value));
+    return `${propName}="${escaped}" ${match}`;
   });
 };
 
@@ -969,9 +1003,6 @@ function define<
   const { props: propsDef = {}, shadow = false, styles, plugins } = options;
   const resolvedPlugins = (plugins ?? []) as unknown as Plugins;
 
-  /** Dev mode: only active when NODE_ENV !== 'production' (replaced at build time) */
-  const dev = process.env.NODE_ENV !== 'production' ? true : false;
-
   /**
    * Internal warning function (only logs in dev mode, stripped in production build)
    */
@@ -979,7 +1010,6 @@ function define<
     process.env.NODE_ENV === 'production'
       ? () => {}
       : (code: string, msg: string) => {
-          if (!dev) return;
           console.warn(`[${tagName}] ${code}: ${msg}`);
         };
 
@@ -1072,15 +1102,6 @@ function define<
 
     /** Previous prop values for change tracking */
     _previousProps: Record<string, any>;
-
-    /** Development mode tracking and metrics (only in dev build) */
-    _dev?: {
-      lastRenderMs: number;
-      fullRenders: number;
-      scheduledFrames: number;
-      missingActions: Set<string>;
-      warned: Set<string>;
-    };
 
     /** Component tag name (for error messages) */
     _tagName: string;
@@ -1182,16 +1203,6 @@ function define<
       this._hasFirstUpdated = false;
       this._previousProps = {};
 
-      // Initialize dev mode tracking (stripped in production build)
-      if (process.env.NODE_ENV !== 'production') {
-        this._dev = {
-          lastRenderMs: 0,
-          fullRenders: 0,
-          scheduledFrames: 0,
-          missingActions: new Set(),
-          warned: new Set(),
-        };
-      }
       this._tagName = tagName;
       this._needsRender = false;
       this._suppressPropRender = new Set();
@@ -1791,6 +1802,7 @@ function define<
       if (keys.length === 0) return; // Early exit if no props to update
 
       const changedKeys: string[] = [];
+      const oldValues: Record<string, any> = {};
 
       // Single pass: merge props, track changes, and handle reflection
       for (const k of keys) {
@@ -1800,9 +1812,10 @@ function define<
         // Merge immediately
         (this.props as any)[k] = newValue;
 
-        // Track changes for callbacks
+        // Track changes for callbacks (capture oldValue before overwriting _previousProps)
         if (this._mounted && oldValue !== newValue) {
           changedKeys.push(k);
+          oldValues[k] = oldValue;
         }
 
         // Handle reflection
@@ -1820,7 +1833,7 @@ function define<
       // Call callbacks only for changed props (after mount)
       if (this._mounted && changedKeys.length > 0) {
         for (const k of changedKeys) {
-          const oldValue = this._previousProps[k];
+          const oldValue = oldValues[k];
           const newValue = (partial as any)[k];
           for (const cb of this._onPropsChanged) {
             try {
@@ -1967,7 +1980,7 @@ function define<
           if (typeof template !== 'string')
             template = template == null ? '' : String(template);
 
-          template = interpolateTemplate(
+          template = expandBindAttributes(
             template,
             this.state as any,
             this.props as any

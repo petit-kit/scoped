@@ -17,11 +17,11 @@ import { springPlugin } from '@petit-kit/scoped/plugins';
 define(
   'my-component',
   { plugins: [springPlugin()] },
-  ({ createSpring, runSpring, host }) => {
+  ({ createSpring, runSpring, state, host }) => {
     const scale = createSpring({ from: 0.8, to: 1, stiffness: 200 });
     runSpring(scale, (value) => host.updateState({ scale: value }));
 
-    return () => `<div bind:style="transform: scale({scale})"></div>`;
+    return () => `<div bind:style="transform: scale(${state.scale})"></div>`;
   }
 );
 ```

@@ -11,12 +11,13 @@ import { mousePlugin } from '@petit-kit/scoped/plugins';
 define(
   'cursor-follower',
   { plugins: [mousePlugin()] },
-  ({ onMouseMove, host }) => {
+  ({ onMouseMove, state, host }) => {
     onMouseMove((x, y) => {
       host.updateState({ cursorX: x, cursorY: y });
     });
 
-    return () => `<div style="left: {cursorX}px; top: {cursorY}px">...</div>`;
+    return () =>
+      `<div style="left: ${state.cursorX}px; top: ${state.cursorY}px">...</div>`;
   }
 );
 ```

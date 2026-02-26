@@ -27,7 +27,7 @@ export type MouseUnsubscribe = () => void;
  *   const stop = onMouseMove((x, y) => {
  *     host.updateState({ cursorX: x, cursorY: y });
  *   });
- *   return () => `<div style="left: {cursorX}px; top: {cursorY}px">...</div>`;
+ *   return () => `<div style="left: ${state.cursorX}px; top: ${state.cursorY}px">...</div>`;
  * });
  * ```
  *

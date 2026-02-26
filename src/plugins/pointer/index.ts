@@ -29,7 +29,7 @@ export type PointerMoveHandler = (pos: PointerPosition) => void;
  *   onPointerMove(({ x, y, v }) => {
  *     host.updateState({ cursorX: x, cursorY: y, speed: v });
  *   });
- *   return () => `<div style="left: {cursorX}px; top: {cursorY}px">...</div>`;
+ *   return () => `<div style="left: ${state.cursorX}px; top: ${state.cursorY}px">...</div>`;
  * });
  * ```
  */
@@ -98,7 +98,7 @@ const springParams: SpringParams = {
  * ```ts
  * define("my-component", { plugins: [pointerPlugin()] }, ({ onPointerMove, onMouseMove }) => {
  *   onPointerMove(({ x, y, v }) => host.updateState({ cx: x, cy: y, velocity: v }));
- *   return () => `<div style="transform: translate({cx}px, {cy}px)">...</div>`;
+ *   return () => `<div style="transform: translate(${state.cx}px, ${state.cy}px)">...</div>`;
  * });
  * ```
  */

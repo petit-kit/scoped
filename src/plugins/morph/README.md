@@ -23,7 +23,7 @@ define(
   ({ state, actions, host }) => {
     state.count = 0;
     actions.increment = () => host.setState({ count: state.count + 1 });
-    return () => `<button on:click="increment">Count: {count}</button>`;
+    return () => `<button on:click="increment">Count: ${state.count}</button>`;
   }
 );
 ```

@@ -8,15 +8,19 @@ Adds easy interval, timeout, and requestAnimationFrame timers to your component 
 import { define } from '@petit-kit/scoped';
 import { timerPlugin } from '@petit-kit/scoped/plugins';
 
-define('my-component', { plugins: [timerPlugin()] }, ({ timer, host }) => {
-  timer.setTimeout(() => host.updateState({ ready: true }), 2000);
+define(
+  'my-component',
+  { plugins: [timerPlugin()] },
+  ({ timer, state, host }) => {
+    timer.setTimeout(() => host.updateState({ ready: true }), 2000);
 
-  const stop = timer.raf((time, deltaTime) => {
-    host.updateState({ elapsed: time });
-  });
+    const stop = timer.raf((time, deltaTime) => {
+      host.updateState({ elapsed: time });
+    });
 
-  return () => `<div>{elapsed}</div>`;
-});
+    return () => `<div>${state.elapsed}</div>`;
+  }
+);
 ```
 
 ## API

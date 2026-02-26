@@ -46,7 +46,7 @@ export type MorphOptions = {
  *     };
  *     return () => `
  *       <input type="text" on:input="onInput" />
- *       <p>Results for: {query}</p>
+ *       <p>Results for: ${state.query}</p>
  *     `;
  *   }
  * );
@@ -82,7 +82,7 @@ export type MorphControls = {
  * define("c-counter", { plugins: [morphPlugin(() => Idiomorph)] }, ({ state, actions, host }) => {
  *   state.count = 0;
  *   actions.increment = () => host.setState({ count: state.count + 1 });
- *   return () => `<button on:click="increment">Count: {count}</button>`;
+ *   return () => `<button on:click="increment">Count: ${state.count}</button>`;
  * });
  * ```
  *

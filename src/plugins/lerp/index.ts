@@ -41,7 +41,7 @@ export type LerpControls = {
  * define("my-component", { plugins: [lerpPlugin()] }, ({ createLerp, runLerp, host }) => {
  *   const opacity = createLerp({ from: 0, to: 1 });
  *   runLerp(opacity, (value) => host.updateState({ opacity: value }));
- *   return () => `<div bind:style="opacity: {opacity}"></div>`;
+ *   return () => `<div bind:style="opacity: ${state.opacity}"></div>`;
  * });
  */
 export const lerpPlugin = (): ComponentPlugin<LerpControls> => ({

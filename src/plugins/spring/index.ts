@@ -45,7 +45,7 @@ export type SpringControls = {
  * define("my-component", { plugins: [springPlugin()] }, ({ createSpring, runSpring, host }) => {
  *   const scale = createSpring({ from: 0.8, to: 1 });
  *   runSpring(scale, (value) => host.updateState({ scale: value }));
- *   return () => `<div bind:style="transform: scale({scale})"></div>`;
+ *   return () => `<div bind:style="transform: scale(${state.scale})"></div>`;
  * });
  */
 export const springPlugin = (): ComponentPlugin<SpringControls> => ({

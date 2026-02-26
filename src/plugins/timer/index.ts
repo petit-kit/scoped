@@ -86,7 +86,7 @@ export type TimerControls = {
  *   const stop = timer.raf((time, dt) => {
  *     host.updateState({ elapsed: time });
  *   });
- *   return () => `<div>{elapsed}</div>`;
+ *   return () => `<div>${state.elapsed}</div>`;
  * });
  * ```
  */

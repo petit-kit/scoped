@@ -17,7 +17,7 @@ define(
       storage.set('theme', next);
       state.theme = next;
     };
-    return () => `<div class="{theme}">...</div>`;
+    return () => `<div class="${state.theme}">...</div>`;
   }
 );
 ```

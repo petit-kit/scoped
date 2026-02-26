@@ -17,11 +17,11 @@ import { lerpPlugin } from '@petit-kit/scoped/plugins';
 define(
   'my-component',
   { plugins: [lerpPlugin()] },
-  ({ createLerp, runLerp, host }) => {
+  ({ createLerp, runLerp, state, host }) => {
     const opacity = createLerp({ from: 0, to: 1, lerp: 0.2 });
     runLerp(opacity, (value) => host.updateState({ opacity: value }));
 
-    return () => `<div bind:style="opacity: {opacity}"></div>`;
+    return () => `<div bind:style="opacity: ${state.opacity}"></div>`;
   }
 );
 ```

@@ -47,14 +47,14 @@ function prefixKey(prefix: string, key: string): string {
  *
  * @example
  * ```ts
- * define("c-settings", { plugins: [localStoragePlugin({ prefix: "app" })] }, ({ storage }) => {
+ * define("c-settings", { plugins: [localStoragePlugin({ prefix: "app" })] }, ({ storage, state, actions }) => {
  *   state.theme = storage.get("theme") ?? "dark";
  *   actions.toggleTheme = () => {
  *     const next = state.theme === "dark" ? "light" : "dark";
  *     storage.set("theme", next);
  *     state.theme = next;
  *   };
- *   return () => `<div class="{theme}">...</div>`;
+ *   return () => `<div class="${state.theme}">...</div>`;
  * });
  * ```
  */
