@@ -28,7 +28,7 @@ https://github.com/petit-kit/scoped`)},wr={"&":"&amp;","<":"&lt;",">":"&gt;",'"'
               `).join("")}
         </div>
       </div>
-    `});De("c-knob",{props:{value:{type:Number,default:0}},plugins:[Gt()]},({props:e,state:u,onPropsChanged:t,createSpring:n,runSpring:r,host:i,effect:c,actions:s,emit:o})=>{u.active=!1,u.style=`transform: rotate(${e.value}deg)`;const f=n({from:e.value,to:e.value,stiffness:200});r(f,d=>i.updateState({style:`transform: rotate(${180+d}deg)`})),t(()=>f.setTarget(e.value));let p=0;c(()=>{const d=l=>{if(l.preventDefault(),l.stopPropagation(),!u.active)return;const h=i.getBoundingClientRect(),m=(l.y-(h.top+h.height/2))/h.height;o("change",{value:e.value+(m-p)/2*360}),p=m};return window.addEventListener("pointermove",d),()=>window.removeEventListener("pointermove",d)},[u.active]);const a=(d,l)=>{document.body.style.cursor=d,document.body.style.userSelect=l};return s.handlePointerDown=()=>{i.updateState({active:!0}),a("grabbing","none");const d=()=>{p=0,i.updateState({active:!1}),a("default","auto")};return window.addEventListener("pointerup",d),()=>window.removeEventListener("pointerup",d)},()=>`
+    `});De("c-knob",{props:{value:{type:Number,default:0}},plugins:[Gt()]},({props:e,state:u,onPropsChanged:t,createSpring:n,runSpring:r,host:i,effect:c,actions:s,emit:o})=>{u.active=!1,u.style=`transform: rotate(${e.value}deg)`;const f=n({from:e.value,to:e.value,stiffness:200});r(f,d=>i.updateState({style:`transform: rotate(${180+d}deg)`})),t(()=>f.setTarget(e.value));let p=0;c(()=>{const d=l=>{if(l.preventDefault(),l.stopPropagation(),!u.active)return;const h=i.getBoundingClientRect(),m=(l.y-(h.top+h.height/2))/h.height;o("change",{value:e.value+(m-p)/2*360}),p=m};return window.addEventListener("pointermove",d),()=>window.removeEventListener("pointermove",d)},[u.active]);const a=(d,l)=>{document.body.style.cursor=d,document.body.style.userSelect=l};return s.handlePointerDown=d=>{d.preventDefault(),d.stopPropagation(),i.updateState({active:!0}),a("grabbing","none");const l=()=>{p=0,i.updateState({active:!1}),a("default","auto")};return window.addEventListener("pointerup",l),()=>window.removeEventListener("pointerup",l)},()=>`
       <div
         class="w-20 h-20 bg-[#0048f2] rounded-full flex items-center justify-center"
         bind:style="style"
@@ -223,7 +223,9 @@ define(
       document.body.style.userSelect = userSelect;
     };
 
-    actions.handlePointerDown = () => {
+    actions.handlePointerDown = (e: PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       host.updateState({ active: true });
       setBody('grabbing', 'none');
 
