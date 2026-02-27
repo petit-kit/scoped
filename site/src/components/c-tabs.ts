@@ -48,7 +48,7 @@ define(
             </div>
           `
               : `
-            <pre class="w-full mb-0! ${size}">
+            <pre class="w-full mb-0! ${size} rounded-t-none!">
               <code class="hljs language-${props.tabs[state.activeTab].language || 'typescript'} ${size} ml-0!">
 ${
   hljs.highlight(props.tabs[state.activeTab].content, {

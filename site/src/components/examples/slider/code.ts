@@ -138,6 +138,8 @@ define(
     let last = 0;
     effect(() => {
       const onMove = (e: PointerEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!state.active) return;
         const r = host.getBoundingClientRect();
         const p = (e.y - (r.top + r.height / 2)) / r.height;
@@ -153,7 +155,9 @@ define(
       document.body.style.userSelect = userSelect;
     };
 
-    actions.handlePointerDown = () => {
+    actions.handlePointerDown = (e: PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       host.updateState({ active: true });
       setBody('grabbing', 'none');
 
