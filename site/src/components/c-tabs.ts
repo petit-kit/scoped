@@ -10,7 +10,7 @@ define(
       tabs: { type: Array, default: [] },
     },
   },
-  ({ props, state, actions, host, escapeHtml, onMount }) => {
+  ({ props, state, actions, host }) => {
     state.activeTab = 0;
     actions.handleTabClick = (e: Event) => {
       const index = (e.target as HTMLElement).dataset.index;

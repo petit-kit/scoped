@@ -2,11 +2,6 @@ import { define } from '@petit-kit/scoped';
 import content from '../content/parts';
 import markdownit from 'markdown-it';
 
-function removeLeadingBr(str: string): string {
-  const brRegex = /^\s*<br\s*\/?>/i;
-  return str.replace(brRegex, '');
-}
-
 define('c-content', {}, () => {
   const md = markdownit({
     html: true,

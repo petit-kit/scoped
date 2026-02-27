@@ -11,7 +11,7 @@ define(
       step: { type: Number, default: 1 },
     },
   },
-  ({ actions, host, props, link, state }) => {
+  ({ actions, host, props, link }) => {
     link('value', 'value');
 
     actions.handleChange = (e: any) =>

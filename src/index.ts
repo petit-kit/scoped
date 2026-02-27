@@ -847,7 +847,8 @@ function reflectAttribute(
 
   // Boolean attributes: set empty string for true, remove for false
   if (type === Boolean) {
-    value ? el.setAttribute(key, '') : el.removeAttribute(key);
+    if (value) el.setAttribute(key, '');
+    else el.removeAttribute(key);
     return;
   }
 
@@ -862,7 +863,8 @@ function reflectAttribute(
     attrValue = value == null ? null : String(value);
   }
 
-  attrValue == null ? el.removeAttribute(key) : el.setAttribute(key, attrValue);
+  if (attrValue == null) el.removeAttribute(key);
+  else el.setAttribute(key, attrValue);
 }
 
 /** Boolean HTML attributes: present = true, absent = false */
@@ -904,7 +906,6 @@ const expandBindAttributes = (
   state: Record<string, any>,
   props: Record<string, any>
 ): string => {
-  const scope = { ...props, ...state };
   const hasOwn = Object.prototype.hasOwnProperty;
 
   return template.replace(bindAttrPattern, (match, propName, key) => {
@@ -2150,7 +2151,6 @@ function define<
       const hasOwn = Object.prototype.hasOwnProperty;
       const state = this.state as Record<string, any>;
       const props = this.props as Record<string, any>;
-      const actions = this.actions as Record<string, any>;
       const bindLen = bindPrefix.length;
 
       for (let i = 0; i < elements.length; i++) {
@@ -2208,9 +2208,8 @@ function define<
             }
             if (propName === 'value') {
               try {
-                currentValue == null
-                  ? el.removeAttribute('value')
-                  : el.setAttribute('value', String(currentValue));
+                if (currentValue == null) el.removeAttribute('value');
+                else el.setAttribute('value', String(currentValue));
               } catch {}
             }
           } else if (currentValue != null) {

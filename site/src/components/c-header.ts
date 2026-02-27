@@ -188,7 +188,7 @@ define(
       }
     });
 
-    actions.close = (e) => {
+    actions.close = () => {
       eyelipLerp.setTarget(1);
       if (isMobile) {
         timer.setTimeout(() => {
@@ -197,7 +197,7 @@ define(
       }
     };
 
-    actions.open = (e) => {
+    actions.open = () => {
       eyelipLerp.setTarget(0);
     };
 
