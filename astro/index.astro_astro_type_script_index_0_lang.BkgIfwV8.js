@@ -40,7 +40,7 @@ https://github.com/petit-kit/scoped`)},wr={"&":"&amp;","<":"&lt;",">":"&gt;",'"'
           class="w-[3px] h-[25px] bg-white rounded-full mt-[-40px] shadow-md"
         ></div>
       </div>
-    `});ye("c-tooltip",{props:{value:{type:Number,default:0},min:{type:Number,default:0},max:{type:Number,default:360}},plugins:[ju()]},({props:e,state:u,onPropsChanged:t,refs:n,host:r,createSpring:i,runSpring:o})=>{u.value=e.value,r.style.position="relative",r.style.width="100%";const s=i({from:e.value,to:e.value,stiffness:300,damping:30,mass:.5}),c=i({from:0,to:0,stiffness:500,damping:20,mass:10});let f=0,p=e.value;const a=Tr(()=>{c.setTarget(0)},50),d=l=>{const h=(e.value-e.min)/(e.max-e.min),g=n.tooltip;g&&(g.style.left=`${h*100}%`)};return t(()=>{d(e.value),s.setTarget(e.value);const l=e.value-p;f=je(-300,l,300),c.setTarget(f),p=e.value,a()}),o(c,l=>{const h=n.tooltip;h&&(h.style.transform=`rotate(${l}deg)`)}),o(s,l=>{r.updateState({value:Math.round(je(e.min,l,e.max))})}),()=>`
+    `});ye("c-tooltip",{props:{value:{type:Number,default:0},min:{type:Number,default:0},max:{type:Number,default:360}},plugins:[ju()]},({props:e,state:u,onPropsChanged:t,refs:n,host:r,createSpring:i,runSpring:o})=>{u.value=e.value,r.style.position="relative",r.style.width="100%";const s=i({from:e.value,to:e.value,stiffness:300,damping:30,mass:.5}),c=i({from:0,to:0,stiffness:500,damping:20,mass:10});let f=0,p=e.value;const a=Tr(()=>{c.setTarget(0)},50),d=l=>{const h=(l-e.min)/(e.max-e.min),g=n.tooltip;g&&(g.style.left=`${h*100}%`)};return t(()=>{d(e.value),s.setTarget(e.value);const l=e.value-p;f=je(-300,l,300),c.setTarget(f),p=e.value,a()}),o(c,l=>{const h=n.tooltip;h&&(h.style.transform=`rotate(${l}deg)`)}),o(s,l=>{r.updateState({value:Math.round(je(e.min,l,e.max))})}),()=>`
       <div class="relative w-[calc(100%-20px)] ml-[10px] h-4 -mt-[25px]">
         <div
           ref="tooltip"
@@ -53,7 +53,7 @@ https://github.com/petit-kit/scoped`)},wr={"&":"&amp;","<":"&lt;",">":"&gt;",'"'
           <span class="font-bold text-white" bind:text="value"></span>
         </div>
       </div>
-    `});const Mu="h-[800px]";ye("c-tabs",{props:{tabs:{type:Array,default:[]}}},({props:e,state:u,actions:t,host:n})=>(u.activeTab=0,t.handleTabClick=r=>{const i=r.target.dataset.index;n.setState({activeTab:parseInt(i||"0")})},()=>`
+    `});const Mu="h-[500px] md:h-[800px]";ye("c-tabs",{props:{tabs:{type:Array,default:[]}}},({props:e,state:u,actions:t,host:n})=>(u.activeTab=0,t.handleTabClick=r=>{const i=r.target.dataset.index;n.setState({activeTab:parseInt(i||"0")})},()=>`
       <div class="w-full overflow-hidden block">
         <div class="flex relative z-10 border-b border-black/10">
           ${e.tabs.map((r,i)=>{const s=u.activeTab===i?"bg-[blue] text-white":"!bg-black/10 hover:!bg-black/20 transition-all duration-300 !text-blue";return`
@@ -312,7 +312,7 @@ define(
     }, 50);
 
     const move = (value: number) => {
-      const percent = (props.value - props.min) / (props.max - props.min);
+      const percent = (value - props.min) / (props.max - props.min);
       const tooltip = refs.tooltip as HTMLElement;
       if (tooltip) tooltip.style.left = \`\${percent * 100}%\`;
     };
