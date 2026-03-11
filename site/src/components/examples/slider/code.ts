@@ -1,5 +1,5 @@
 import { define, springPlugin } from '@petit-kit/scoped';
-import { clamp } from '../../../lib/utils';
+import { clamp, debounce } from '../../../lib/utils';
 
 define(
   'c-slider',
@@ -18,7 +18,9 @@ define(
       host.updateState({ value: e.target.valueAsNumber });
 
     actions.handleKnobChange = (e: any) =>
-      host.updateState({ value: clamp(props.min, e.detail.value, props.max) });
+      host.updateState({
+        value: Math.round(clamp(props.min, e.detail.value, props.max)),
+      });
 
     return () => `
       <div class="flex flex-col items-center gap-10 w-[300px]">
@@ -27,9 +29,11 @@ define(
           <c-rolling-number bind:value="value"></c-rolling-number>
         </div>
         <input
+          id="example-input"
           type="range" min="${props.min}" max="${props.max}" step="${props.step}"
           bind:value="value" on:input="handleChange"
         />
+        <c-tooltip bind:value="value" min="${props.min}" max="${props.max}"></c-tooltip>
       </div>
     `;
   }
@@ -180,6 +184,91 @@ define(
         <div
           class="w-[3px] h-[25px] bg-white rounded-full mt-[-40px] shadow-md"
         ></div>
+      </div>
+    `;
+  }
+);
+
+define(
+  'c-tooltip',
+  {
+    props: {
+      value: { type: Number, default: 0 },
+      min: { type: Number, default: 0 },
+      max: { type: Number, default: 360 },
+    },
+    plugins: [springPlugin()],
+  },
+  ({ props, state, onPropsChanged, refs, host, createSpring, runSpring }) => {
+    state.value = props.value;
+
+    host.style.position = 'relative';
+    host.style.width = '100%';
+
+    const value: any = createSpring({
+      from: props.value,
+      to: props.value,
+      stiffness: 300,
+      damping: 30,
+      mass: 0.5,
+    });
+
+    const rotation: any = createSpring({
+      from: 0,
+      to: 0,
+      stiffness: 500,
+      damping: 20,
+      mass: 10,
+    });
+
+    let targetRotation: number = 0;
+    let lastValue = props.value;
+
+    const debouncedStop = debounce(() => {
+      rotation.setTarget(0);
+    }, 50);
+
+    const move = (value: number) => {
+      const percent = (value - props.min) / (props.max - props.min);
+      const tooltip = refs.tooltip as HTMLElement;
+      if (tooltip) tooltip.style.left = `${percent * 100}%`;
+    };
+
+    onPropsChanged(() => {
+      move(props.value);
+      value.setTarget(props.value);
+
+      const diff: number = props.value - lastValue;
+      targetRotation = clamp(-300, diff, 300);
+      rotation.setTarget(targetRotation);
+      lastValue = props.value;
+
+      debouncedStop();
+    });
+
+    runSpring(rotation, (value: number) => {
+      const tooltip = refs.tooltip as HTMLElement;
+      if (tooltip) tooltip.style.transform = `rotate(${value}deg)`;
+    });
+
+    runSpring(value, (value: number) => {
+      host.updateState({
+        value: Math.round(clamp(props.min, value, props.max)),
+      });
+    });
+
+    return () => `
+      <div class="relative w-[calc(100%-20px)] ml-[10px] h-4 -mt-[25px]">
+        <div
+          ref="tooltip"
+          class="absolute top-0 left-0 text-center bg-[#0048f2] translate-x-[-50%] w-[50px] px-6 py-1 flex items-center justify-center rounded-md shadow-md"
+          style="transform-origin: center -26px;"
+        >
+          <div
+            class="absolute w-[15px] h-[10px] left-1/2 top-0 -translate-x-1/2 [aspect-ratio:1/cos(30deg)] [clip-path:polygon(50%_0,100%_100%,0_100%)] bg-[#0048f2] -translate-y-[calc(100%-1px)] "
+          ></div>
+          <span class="font-bold text-white" bind:text="value"></span>
+        </div>
       </div>
     `;
   }

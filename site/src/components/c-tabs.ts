@@ -1,7 +1,7 @@
 import { define } from '@petit-kit/scoped';
 import hljs from 'highlight.js/lib/core';
 
-const size = 'h-[800px]';
+const size = 'h-[500px] md:h-[800px]';
 
 define(
   'c-tabs',

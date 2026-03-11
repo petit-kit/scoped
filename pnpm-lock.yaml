@@ -8,8 +8,8 @@ importers:
   .:
     dependencies:
       '@petit-kit/animate':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.22
+        version: 0.0.22
     devDependencies:
       '@oxlint/binding-darwin-arm64':
         specifier: ^1.50.0
@@ -253,10 +253,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@petit-kit/animate@0.0.1':
+  '@petit-kit/animate@0.0.22':
     resolution:
       {
-        integrity: sha512-MtCfK40Xtaue0lNA3kM9IAwf0+TslvReo2268tib4GN65IA/NVDfMyxsJYmTffDv3dVkAVRZAWhCxCV45HaZEg==,
+        integrity: sha512-Xtr00bIm4uxKU8ecYkmAfKjQl+fbPGavrLUg8bUenSNsAE+gdhCyIiZ8apyyAR9vb24Oy1gSHo0vw6mKH+VgZQ==,
       }
 
   '@rollup/plugin-node-resolve@16.0.3':
@@ -814,7 +814,7 @@ snapshots:
   '@oxlint/binding-win32-x64-msvc@1.50.0':
     optional: true
 
-  '@petit-kit/animate@0.0.1': {}
+  '@petit-kit/animate@0.0.22': {}
 
   '@rollup/plugin-node-resolve@16.0.3(rollup@4.57.1)':
     dependencies:
