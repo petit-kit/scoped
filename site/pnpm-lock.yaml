@@ -8,8 +8,8 @@ importers:
   .:
     dependencies:
       '@petit-kit/scoped':
-        specifier: 0.0.8-beta.22
-        version: 0.0.8-beta.22
+        specifier: 0.0.8-beta.26
+        version: 0.0.8-beta.26
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.1.18(vite@6.4.1(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
@@ -862,16 +862,16 @@ packages:
         integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==,
       }
 
-  '@petit-kit/animate@0.0.1':
+  '@petit-kit/animate@0.0.23':
     resolution:
       {
-        integrity: sha512-MtCfK40Xtaue0lNA3kM9IAwf0+TslvReo2268tib4GN65IA/NVDfMyxsJYmTffDv3dVkAVRZAWhCxCV45HaZEg==,
+        integrity: sha512-Z0hpluIXf2HlCXixEYV+nVRsQKgGp89cLmxezrenLcmqeim7XMDhW/bcGabv2ixxk8nB9/+WonKsBsO5edjipw==,
       }
 
-  '@petit-kit/scoped@0.0.8-beta.22':
+  '@petit-kit/scoped@0.0.8-beta.26':
     resolution:
       {
-        integrity: sha512-qIUtj3NeCo8qGhOt5eNpAfxYllCDPCqJ/Xos2SipiK78iUH5lpMSiZBrwLJH791XkiKmnHXC2TGx9drpzoev6A==,
+        integrity: sha512-EN3NW0GzMxAy3azZOtmgVyXcR5w05vas79+dHmdKMyWc4CD6kw8g7+564ViKA/ZwZEgK8WVLnBbHIS/nkoTVMg==,
       }
 
   '@rollup/pluginutils@5.3.0':
@@ -3876,11 +3876,11 @@ snapshots:
 
   '@oslojs/encoding@1.1.0': {}
 
-  '@petit-kit/animate@0.0.1': {}
+  '@petit-kit/animate@0.0.23': {}
 
-  '@petit-kit/scoped@0.0.8-beta.22':
+  '@petit-kit/scoped@0.0.8-beta.26':
     dependencies:
-      '@petit-kit/animate': 0.0.1
+      '@petit-kit/animate': 0.0.23
 
   '@rollup/pluginutils@5.3.0(rollup@4.57.1)':
     dependencies:

@@ -1,4 +1,8 @@
-import type { ComponentPlugin, ComponentContextBase } from '../../index';
+import type {
+  ComponentContextBase,
+  ComponentHost,
+  ComponentPlugin,
+} from '@petit-kit/scoped';
 
 /**
  * Minimal Idiomorph API used by this plugin.
@@ -46,12 +50,29 @@ export type MorphOptions = {
  *     };
  *     return () => `
  *       <input type="text" on:input="onInput" />
- *       <p>Results for: ${state.query}</p>
+ *       <p>Results for: {query}</p>
  *     `;
  *   }
  * );
  * ```
  */
+/** Walk the prototype chain — `innerHTML` is not always an own property of `ShadowRoot` / `HTMLElement` prototypes. */
+function getInnerHTMLDescriptor(
+  root: HTMLElement | ShadowRoot
+): PropertyDescriptor {
+  let cur: object | null = root;
+  while (cur) {
+    const desc = Object.getOwnPropertyDescriptor(cur, 'innerHTML');
+    if (desc?.set && desc?.get) {
+      return desc;
+    }
+    cur = Object.getPrototypeOf(cur);
+  }
+  throw new Error(
+    '[morph] Could not resolve innerHTML accessor for this render root'
+  );
+}
+
 export type MorphControls = {
   /**
    * Morph the component root with the given HTML string.
@@ -82,7 +103,7 @@ export type MorphControls = {
  * define("c-counter", { plugins: [morphPlugin(() => Idiomorph)] }, ({ state, actions, host }) => {
  *   state.count = 0;
  *   actions.increment = () => host.setState({ count: state.count + 1 });
- *   return () => `<button on:click="increment">Count: ${state.count}</button>`;
+ *   return () => `<button on:click="increment">Count: {count}</button>`;
  * });
  * ```
  *
@@ -98,17 +119,27 @@ export const morphPlugin = (
   options: MorphOptions = {}
 ): ComponentPlugin<MorphControls> => ({
   name: 'morph',
-  extend: (context: ComponentContextBase, host) => {
+  extend: (context: ComponentContextBase, host: ComponentHost) => {
     const { ignoreActiveValue = true, callbacks } = options;
     const Idiomorph = getIdiomorph();
 
-    const hostAny = host as any;
-    const root: HTMLElement | ShadowRoot = hostAny._root;
-    const isShadow: boolean = hostAny._isShadowRoot;
+    // @petit-kit/scoped stores the render target on `m` (host or shadow root) and `u` for shadow mode.
+    // Older drafts used `_root` / `_isShadowRoot`; keep fallbacks for compatibility.
+    const h = host as unknown as {
+      m?: HTMLElement | ShadowRoot;
+      _root?: HTMLElement | ShadowRoot;
+      u?: boolean;
+      _isShadowRoot?: boolean;
+    };
+    const root = h.m ?? h._root;
 
-    // Resolve the native innerHTML descriptor from the correct prototype.
-    const proto = isShadow ? ShadowRoot.prototype : HTMLElement.prototype;
-    const nativeDesc = Object.getOwnPropertyDescriptor(proto, 'innerHTML')!;
+    if (root == null) {
+      throw new Error(
+        '[morph] Missing render root on host (expected host.m). Is @petit-kit/scoped up to date?'
+      );
+    }
+
+    const nativeDesc = getInnerHTMLDescriptor(root);
 
     // Morph the component root children with the given HTML string.
     const morphRoot = (html: string) => {

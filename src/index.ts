@@ -1007,12 +1007,9 @@ function define<
   /**
    * Internal warning function (only logs in dev mode, stripped in production build)
    */
-  const warn =
-    process.env.NODE_ENV === 'production'
-      ? () => {}
-      : (code: string, msg: string) => {
-          console.warn(`[${tagName}] ${code}: ${msg}`);
-        };
+  const warn = (code: string, msg: string) => {
+    console.warn(`[${tagName}] ${code}: ${msg}`);
+  };
 
   /**
    * TinyComponent - The custom element class that extends HTMLElement
