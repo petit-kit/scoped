@@ -83,6 +83,15 @@ const escapeHtmlImpl = (str: unknown): string => {
   return String(str).replace(/[&<>"']/g, (c) => escapeMap[c]);
 };
 
+/** @internal Minification aliases — mangled to single chars by terser/esbuild */
+const oIs = Object.is;
+const hasOwn = Object.prototype.hasOwnProperty;
+const errMsg = (e: any): string => errMsg(e);
+const DEV =
+  typeof process !== 'undefined' &&
+  process.env &&
+  process.env.NODE_ENV !== 'production';
+
 /**
  * Prefix for one-way bindings in templates.
  *
@@ -786,7 +795,7 @@ function parsePropValue(raw: string | null, def?: PropDefinition): any {
         // "false" or "0" string = false
         if (raw === 'false' || raw === '0') return false;
         // Any other non-null value = true
-        return raw != null;
+        return true;
       }
 
       case Object:
@@ -906,8 +915,6 @@ const expandBindAttributes = (
   state: Record<string, any>,
   props: Record<string, any>
 ): string => {
-  const hasOwn = Object.prototype.hasOwnProperty;
-
   return template.replace(bindAttrPattern, (match, propName, key) => {
     // Skip content bindings (handled by _applyBindings)
     if (propName === 'text' || propName === 'html') return match;
@@ -1011,6 +1018,20 @@ function define<
     console.warn(`[${tagName}] ${code}: ${msg}`);
   };
 
+  const runHooks = (
+    hooks: ((...a: any[]) => void)[],
+    code: string,
+    ...args: any[]
+  ) => {
+    for (let i = 0; i < hooks.length; i++) {
+      try {
+        hooks[i](...args);
+      } catch (e: any) {
+        warn(code, errMsg(e));
+      }
+    }
+  };
+
   /**
    * TinyComponent - The custom element class that extends HTMLElement
    *
@@ -1047,6 +1068,9 @@ function define<
 
     /** Flag to prevent duplicate scheduled effects-only updates */
     _effectsScheduled: boolean;
+
+    /** RAF handle when destroy is deferred after disconnect (cleared on reconnect) */
+    _destroyTimer: number | null;
 
     /** Root element (ShadowRoot if shadow: true, otherwise this element) */
     _root: HTMLElement | ShadowRoot;
@@ -1176,10 +1200,17 @@ function define<
       this._lastTemplate = null;
       this._scheduled = false;
       this._effectsScheduled = false;
+      this._destroyTimer = null;
 
       // Create root (shadow DOM or light DOM)
       this._isShadowRoot = shadow;
       this._root = shadow ? this.attachShadow({ mode: 'open' }) : this;
+      // Inject styles into ShadowRoot for shadow DOM components
+      if (shadow && styles && this._root instanceof ShadowRoot) {
+        const style = document.createElement('style');
+        style.textContent = styles;
+        this._root.appendChild(style);
+      }
       this._slotStore = null;
 
       // Initialize lifecycle hook arrays
@@ -1279,13 +1310,13 @@ function define<
 
       // Track prop change for onPropsChanged hook (only after mount)
       if (this._mounted && parsedOldValue !== parsedNewValue) {
-        for (const cb of this._onPropsChanged) {
-          try {
-            cb(name, parsedOldValue, parsedNewValue);
-          } catch (e: any) {
-            warn('ON_PROPS_CHANGED_ERROR', String(e?.message || e));
-          }
-        }
+        runHooks(
+          this._onPropsChanged,
+          'ON_PROPS_CHANGED_ERROR',
+          name,
+          parsedOldValue,
+          parsedNewValue
+        );
       }
 
       // Update previous props tracking
@@ -1334,11 +1365,16 @@ function define<
      * @internal This is a Custom Elements API lifecycle method
      */
     connectedCallback(): void {
+      if (this._destroyTimer != null) {
+        cancelAnimationFrame(this._destroyTimer);
+        this._destroyTimer = null;
+        return; // already initialized, just got reparented
+      }
       // PRIORITY 1: Parse props (required for render)
       // Read all HTML attributes and parse according to prop definitions
       // Use for...in loop (faster than forEach)
       for (const key in this._typedProps) {
-        if (!this._typedProps.hasOwnProperty(key)) continue;
+        if (!hasOwn.call(this._typedProps, key)) continue;
         const attr = this.getAttribute(key);
         const def = this._typedProps[key];
         const parsedValue = parsePropValue(attr, def);
@@ -1383,13 +1419,13 @@ function define<
               (this.state as any)[key] = (this.props as any)[propName];
               this._onPropsChanged.push((name, _old, value) => {
                 if (name !== propName) return;
-                if (Object.is((this.state as any)[key], value)) return;
+                if (oIs((this.state as any)[key], value)) return;
                 (this.state as any)[key] = value;
               });
               const record: EffectRecord = {
                 fn: () => {
                   const next = (this.state as any)[key];
-                  if (Object.is((this.props as any)[propName], next)) return;
+                  if (oIs((this.props as any)[propName], next)) return;
                   (this.props as any)[propName] = next;
                   this._previousProps[propName] = next;
                   const def = this._typedProps[propName];
@@ -1415,7 +1451,7 @@ function define<
                     initialDeps = depsValue;
                   }
                 } catch (e: any) {
-                  warn('COMPUTED_DEPS_ERROR', String(e?.message || e));
+                  warn('COMPUTED_DEPS_ERROR', errMsg(e));
                 }
               }
 
@@ -1452,7 +1488,7 @@ function define<
                 Object.assign(context, extension);
               }
             } catch (e: any) {
-              warn('PLUGIN_ERROR', String(e?.message || e));
+              warn('PLUGIN_ERROR', errMsg(e));
             }
           }
 
@@ -1467,7 +1503,7 @@ function define<
           );
         }
       } catch (e: any) {
-        warn('SETUP_ERROR', String(e?.message || e));
+        warn('SETUP_ERROR', errMsg(e));
         throw e;
       }
 
@@ -1513,8 +1549,13 @@ function define<
      *
      * @internal This is a Custom Elements API lifecycle method
      */
-    disconnectedCallback(): void {
-      this.destroy();
+    disconnectedCallback() {
+      this._destroyTimer = requestAnimationFrame(() => {
+        this._destroyTimer = null;
+        if (!this.isConnected) {
+          this.destroy();
+        }
+      });
     }
 
     /**
@@ -1578,13 +1619,7 @@ function define<
      */
     destroy(): void {
       // Run onDestroy callbacks
-      for (const cb of this._onDestroy) {
-        try {
-          cb();
-        } catch (e: any) {
-          warn('ON_DESTROY_ERROR', String(e?.message || e));
-        }
-      }
+      runHooks(this._onDestroy, 'ON_DESTROY_ERROR');
 
       // Clean up all effect cleanup functions
       for (const effect of this._effects) {
@@ -1592,7 +1627,7 @@ function define<
         try {
           effect.cleanup();
         } catch (e: any) {
-          warn('EFFECT_CLEANUP_ERROR', String(e?.message || e));
+          warn('EFFECT_CLEANUP_ERROR', errMsg(e));
         }
         effect.cleanup = undefined;
       }
@@ -1605,8 +1640,33 @@ function define<
       }
       this._delegated.clear();
 
-      // Reset mounted flag
+      // Reset all lifecycle arrays so reconnection via connectedCallback
+      // doesn't push duplicate callbacks onto stale arrays.
+      this._effects = [];
+      this._computed = [];
+      this._onMount = [];
+      this._onDestroy = [];
+      this._onUpdate = [];
+      this._onBeforeUpdate = [];
+      this._onFirstUpdate = [];
+      this._onPropsChanged = [];
+      this._shouldRender = null;
+
+      // Reset render and template cache
+      this._render = null;
+      this._lastTemplate = null;
+
+      // Reset flags so lifecycle hooks fire correctly on reconnect
       this._mounted = false;
+      this._hasFirstUpdated = false;
+
+      // Reset slot store so light DOM slots are recaptured on reconnect
+      this._slotStore = null;
+
+      // Reset bind function tokens
+      this._bindFnTokens.clear();
+      this._bindFnId = 0;
+      this._hasBoundComputed = false;
     }
 
     /**
@@ -1700,9 +1760,9 @@ function define<
       const next = partial as any;
       const current = this.state as any;
       for (const key in next) {
-        if (!Object.prototype.hasOwnProperty.call(next, key)) continue;
+        if (!hasOwn.call(next, key)) continue;
         const value = next[key];
-        if (!Object.is(current[key], value)) {
+        if (!oIs(current[key], value)) {
           current[key] = value;
           changedKeys.push(key);
         }
@@ -1718,15 +1778,25 @@ function define<
       } else {
         // After mount, schedule render via requestAnimationFrame
         if (!this._render || !this.isConnected) return;
-        if (this._scheduled) return; // Prevent duplicate scheduling
+
+        // Accumulate changedKeys across batched setState calls
+        if (this._scheduled) {
+          if (this._changedKeys) {
+            for (let i = 0; i < changedKeys.length; i++) {
+              if (this._changedKeys.indexOf(changedKeys[i]) === -1) {
+                this._changedKeys.push(changedKeys[i]);
+              }
+            }
+          }
+          return;
+        }
 
         this._scheduled = true;
-        const keys = [...changedKeys];
+        this._updateReason = 'state';
+        this._changedKeys = [...changedKeys];
         requestAnimationFrame(() => {
           this._scheduled = false;
           if (!this._render || !this.isConnected) return;
-          this._updateReason = 'state';
-          this._changedKeys = keys;
           this.update(true); // Full render, not just effects
         });
       }
@@ -1831,15 +1901,13 @@ function define<
       // Call callbacks only for changed props (after mount)
       if (this._mounted && changedKeys.length > 0) {
         for (const k of changedKeys) {
-          const oldValue = oldValues[k];
-          const newValue = (partial as any)[k];
-          for (const cb of this._onPropsChanged) {
-            try {
-              cb(k, oldValue, newValue);
-            } catch (e: any) {
-              warn('ON_PROPS_CHANGED_ERROR', String(e?.message || e));
-            }
-          }
+          runHooks(
+            this._onPropsChanged,
+            'ON_PROPS_CHANGED_ERROR',
+            k,
+            oldValues[k],
+            (partial as any)[k]
+          );
         }
       }
 
@@ -1944,13 +2012,7 @@ function define<
 
       // Call onBeforeUpdate hooks before update (only for full renders after mount)
       if (fullRender && this._mounted) {
-        for (const cb of this._onBeforeUpdate) {
-          try {
-            cb();
-          } catch (e: any) {
-            warn('ON_BEFORE_UPDATE_ERROR', String(e?.message || e));
-          }
-        }
+        runHooks(this._onBeforeUpdate, 'ON_BEFORE_UPDATE_ERROR');
       }
 
       if (fullRender) {
@@ -1969,7 +2031,7 @@ function define<
           try {
             template = this._render();
           } catch (e: any) {
-            warn('RENDER_ERROR', String(e?.message || e));
+            warn('RENDER_ERROR', errMsg(e));
             // On render error, use empty template
             template = '';
           }
@@ -1993,8 +2055,7 @@ function define<
           this._hasBoundComputed = false;
 
           const templateUnchanged =
-            this._lastTemplate !== null &&
-            Object.is(this._lastTemplate, template);
+            this._lastTemplate !== null && oIs(this._lastTemplate, template);
           let didUpdateDom = false;
 
           if (!templateUnchanged || !this._mounted) {
@@ -2016,27 +2077,20 @@ function define<
               if (didUpdateDom) this._syncRefsAndBindEvents();
               if (!this._mounted) {
                 this._mounted = true;
-                for (const cb of this._onMount) {
-                  try {
-                    cb();
-                  } catch (e: any) {
-                    warn('ON_MOUNT_ERROR', String(e?.message || e));
-                  }
-                }
+                runHooks(this._onMount, 'ON_MOUNT_ERROR');
                 // Fire onPropsChanged for props that differ from defaults
                 for (const key in this._typedProps) {
-                  if (!this._typedProps.hasOwnProperty(key)) continue;
-                  const def = this._typedProps[key];
+                  if (!hasOwn.call(this._typedProps, key)) continue;
                   const currentValue = (this.props as any)[key];
-                  const defaultValue = getPropDefault(def);
+                  const defaultValue = getPropDefault(this._typedProps[key]);
                   if (currentValue !== defaultValue) {
-                    for (const cb of this._onPropsChanged) {
-                      try {
-                        cb(key, defaultValue, currentValue);
-                      } catch (e: any) {
-                        warn('ON_PROPS_CHANGED_ERROR', String(e?.message || e));
-                      }
-                    }
+                    runHooks(
+                      this._onPropsChanged,
+                      'ON_PROPS_CHANGED_ERROR',
+                      key,
+                      defaultValue,
+                      currentValue
+                    );
                   }
                 }
               }
@@ -2110,23 +2164,11 @@ function define<
       // Call onFirstUpdate hooks (only once)
       if (!this._hasFirstUpdated) {
         this._hasFirstUpdated = true;
-        for (const cb of this._onFirstUpdate) {
-          try {
-            cb();
-          } catch (e: any) {
-            warn('ON_FIRST_UPDATE_ERROR', String(e?.message || e));
-          }
-        }
+        runHooks(this._onFirstUpdate, 'ON_FIRST_UPDATE_ERROR');
       }
 
       // Call onUpdate hooks (every update)
-      for (const cb of this._onUpdate) {
-        try {
-          cb();
-        } catch (e: any) {
-          warn('ON_UPDATE_ERROR', String(e?.message || e));
-        }
-      }
+      runHooks(this._onUpdate, 'ON_UPDATE_ERROR');
 
       this._applyBindings();
     }
@@ -2145,7 +2187,6 @@ function define<
     _applyBindings(): void {
       const root = this._isShadowRoot ? this._root : this;
       const elements = root.querySelectorAll('*');
-      const hasOwn = Object.prototype.hasOwnProperty;
       const state = this.state as Record<string, any>;
       const props = this.props as Record<string, any>;
       const bindLen = bindPrefix.length;
@@ -2198,7 +2239,7 @@ function define<
               el.innerHTML = nextHtml;
             }
           } else if (propName in el) {
-            if (!Object.is((el as any)[propName], currentValue)) {
+            if (!oIs((el as any)[propName], currentValue)) {
               try {
                 (el as any)[propName] = currentValue;
               } catch {}
@@ -2230,7 +2271,7 @@ function define<
     _depsChanged(prev: any[] | undefined, next: any[] | undefined): boolean {
       if (!prev || !next || prev.length !== next.length) return true;
       for (let i = 0; i < next.length; i++) {
-        if (!Object.is(prev[i], next[i])) return true;
+        if (!oIs(prev[i], next[i])) return true;
       }
       return false;
     }
@@ -2259,7 +2300,7 @@ function define<
               shouldRun = this._depsChanged(record.prevDeps, nextDeps);
             }
           } catch (e: any) {
-            warn('COMPUTED_DEPS_ERROR', String(e?.message || e));
+            warn('COMPUTED_DEPS_ERROR', errMsg(e));
             shouldRun = true;
             nextDeps = undefined;
           }
@@ -2273,7 +2314,7 @@ function define<
               ? record.getter(nextDeps)
               : record.getter();
         } catch (e: any) {
-          warn('COMPUTED_ERROR', String(e?.message || e));
+          warn('COMPUTED_ERROR', errMsg(e));
         }
 
         if (nextDeps) {
@@ -2306,7 +2347,7 @@ function define<
               shouldRun = this._depsChanged(effect.prevDeps, nextDeps);
             }
           } catch (e: any) {
-            warn('EFFECT_DEPS_ERROR', String(e?.message || e));
+            warn('EFFECT_DEPS_ERROR', errMsg(e));
             shouldRun = true;
             nextDeps = undefined;
           }
@@ -2398,7 +2439,7 @@ function define<
       // Clear existing refs (mutate in place to preserve reference)
       const currentRefs = this.refs as any;
       for (const k in currentRefs) {
-        if (currentRefs.hasOwnProperty(k)) {
+        if (hasOwn.call(currentRefs, k)) {
           delete currentRefs[k];
         }
       }
@@ -2451,12 +2492,10 @@ function define<
               };
               (el as any)[handlerKey] = handler;
               el.addEventListener(eventType, handler);
-            } else {
-              if (process.env.NODE_ENV !== 'production') {
-                console.warn(
-                  `[${this._tagName}] MISSING_ACTION: Action "${actionName}" not found for on:${eventType}`
-                );
-              }
+            } else if (DEV) {
+              console.warn(
+                `[${this._tagName}] MISSING_ACTION: Action "${actionName}" not found for on:${eventType}`
+              );
             }
           }
         }
@@ -2706,8 +2745,8 @@ function define<
 
   // Define component immediately - custom elements auto-upgrade when defined
   if (!customElements.get(tagName)) {
-    // Inject styles into head if provided
-    if (styles && typeof document !== 'undefined') {
+    // Inject styles: into ShadowRoot for shadow DOM, into document.head for light DOM
+    if (styles && typeof document !== 'undefined' && !shadow) {
       const styleId = `scope-${tagName}-styles`;
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -2720,9 +2759,9 @@ function define<
     try {
       customElements.define(tagName, TinyComponent);
     } catch (e: any) {
-      warn('DEFINE_ERROR', String(e?.message || e));
+      warn('DEFINE_ERROR', errMsg(e));
     }
-  } else if (process.env.NODE_ENV !== 'production') {
+  } else if (DEV) {
     console.warn(`[${tagName}] ALREADY_DEFINED`);
   }
   return TinyComponent;
